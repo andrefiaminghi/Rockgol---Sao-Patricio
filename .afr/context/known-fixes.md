@@ -18,6 +18,7 @@ maintainers: ["André Ribeiro"]
 | DIV-02 | Mata-Mata | Semifinal gerada antes do término de todas as partidas da 1ª fase | documentado |
 | DIV-03 | Desempate | Empate com múltiplos critérios e ordenação instável | documentado |
 | DIV-04 | CI/CD / Android | Capacitor CLI 7+ falha no GitHub Actions por exigir Node >= 22 | resolvido |
+| DIV-05 | CI/CD / Android | Capacitor 7 exige JDK 21 para compilação (error: invalid source release: 21) | resolvido |
 
 ---
 
@@ -67,5 +68,17 @@ Garantir função de sort determinística com hierarquia estrita: Pontos > Vitó
 **Causa raiz:** O workflow do GitHub Actions estava fixado em `node-version: 20`, enquanto a release mais recente do Capacitor CLI exige Node.js >= 22.0.0.
 
 **Fix:** Atualizar o step `actions/setup-node@v4` no workflow `.github/workflows/build-apk.yml` definindo explicitamente `node-version: 22`.
+
+**Onde aplica:** CI/CD, `.github/workflows/build-apk.yml`.
+
+---
+
+## DIV-05 — Capacitor 7 exige JDK 21 para compilação (error: invalid source release: 21)
+
+**Sintoma:** O Gradle aborta na task `:capacitor-android:compileDebugJavaWithJavac` com o erro `error: invalid source release: 21`.
+
+**Causa raiz:** O Capacitor 7 compila a biblioteca Android para Java 21 (`sourceCompatibility = JavaVersion.VERSION_21`), mas o workflow do GitHub Actions estava provisionando Java 17.
+
+**Fix:** Atualizar o step `actions/setup-java@v4` no workflow `.github/workflows/build-apk.yml` definindo explicitamente `java-version: '21'`.
 
 **Onde aplica:** CI/CD, `.github/workflows/build-apk.yml`.

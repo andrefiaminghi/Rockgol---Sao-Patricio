@@ -15,10 +15,11 @@ project: "Rockgol - São Patrício"
   - Sincronização dos web assets compilados (`dist/`) com o projeto nativo via `npx cap sync android`.
   - Criação do workflow do GitHub Actions em `.github/workflows/build-apk.yml`.
   - Correção (DIV-04): Atualização do step de Node.js para `node-version: 22`, atendendo à exigência do `@capacitor/cli 7+` (`NodeJS >=22.0.0`).
+  - Correção (DIV-05): Atualização do step de Java para `java-version: 21` (Temurin), resolvendo o erro `invalid source release: 21` exigido pelo compilador do Capacitor 7.
   - Atualização do `.gitignore` para ignorar caches do Gradle e pastas temporárias de build do Android.
   - Validação de 100% dos testes unitários (32/32) e integridade da build.
 - **Decisões Tomadas:**
-  - Compilação do APK delegada para o GitHub Actions na nuvem conforme escolha do usuário com Node.js 22 LTS e Java 17.
+  - Compilação do APK delegada para o GitHub Actions na nuvem conforme escolha do usuário com Node.js 22 LTS e Java 21 LTS.
 - **Próximos Passos:**
   - Usuário faz o push para o GitHub e baixa o APK gerado na aba Actions.
 
