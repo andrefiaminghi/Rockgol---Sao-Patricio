@@ -13,11 +13,12 @@ project: "Rockgol - São Patrício"
   - Criação do `capacitor.config.json` com `appId: com.saopatricio.rockgol2026`, `appName: RockGol 2026` e `webDir: dist`.
   - Inicialização da plataforma nativa Android via `npx cap add android` gerando a pasta `android/` com Gradle e AndroidManifest.
   - Sincronização dos web assets compilados (`dist/`) com o projeto nativo via `npx cap sync android`.
-  - Criação do workflow do GitHub Actions em `.github/workflows/build-apk.yml` com trigger manual (`workflow_dispatch`) e automático (`push main`), configurando Java 17, Node 20, compilação de produção e Gradle assembleDebug, disponibilizando o arquivo `RockGol-2026-Debug-APK` como artefato para download.
+  - Criação do workflow do GitHub Actions em `.github/workflows/build-apk.yml`.
+  - Correção (DIV-04): Atualização do step de Node.js para `node-version: 22`, atendendo à exigência do `@capacitor/cli 7+` (`NodeJS >=22.0.0`).
   - Atualização do `.gitignore` para ignorar caches do Gradle e pastas temporárias de build do Android.
   - Validação de 100% dos testes unitários (32/32) e integridade da build.
 - **Decisões Tomadas:**
-  - Compilação do APK delegada para o GitHub Actions na nuvem conforme escolha do usuário.
+  - Compilação do APK delegada para o GitHub Actions na nuvem conforme escolha do usuário com Node.js 22 LTS e Java 17.
 - **Próximos Passos:**
   - Usuário faz o push para o GitHub e baixa o APK gerado na aba Actions.
 

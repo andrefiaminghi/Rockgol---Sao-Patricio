@@ -17,6 +17,7 @@ maintainers: ["André Ribeiro"]
 | DIV-01 | Regra de Negócio | Partida não realizada contabilizada como empate 0x0 | documentado |
 | DIV-02 | Mata-Mata | Semifinal gerada antes do término de todas as partidas da 1ª fase | documentado |
 | DIV-03 | Desempate | Empate com múltiplos critérios e ordenação instável | documentado |
+| DIV-04 | CI/CD / Android | Capacitor CLI 7+ falha no GitHub Actions por exigir Node >= 22 | resolvido |
 
 ---
 
@@ -56,3 +57,15 @@ Exibir aviso informativo na aba Mata-Mata ("Aguardando conclusão de todas as 21
 Garantir função de sort determinística com hierarquia estrita: Pontos > Vitórias > Saldo de Gols > Gols Pró > Confronto Direto > Ordem Alfabética / Sorteio pré-definido.
 
 **Onde aplica:** Módulo da Classificação.
+
+---
+
+## DIV-04 — Capacitor CLI 7+ falha no GitHub Actions por exigir Node >= 22
+
+**Sintoma:** O comando `npx cap sync android` aborta no runner do GitHub Actions com o erro `[fatal] The Capacitor CLI requires NodeJS >=22.0.0. Please install the latest LTS version. Process completed with exit code 1.`
+
+**Causa raiz:** O workflow do GitHub Actions estava fixado em `node-version: 20`, enquanto a release mais recente do Capacitor CLI exige Node.js >= 22.0.0.
+
+**Fix:** Atualizar o step `actions/setup-node@v4` no workflow `.github/workflows/build-apk.yml` definindo explicitamente `node-version: 22`.
+
+**Onde aplica:** CI/CD, `.github/workflows/build-apk.yml`.
