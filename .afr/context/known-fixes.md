@@ -19,6 +19,22 @@ maintainers: ["André Ribeiro"]
 | DIV-03 | Desempate | Empate com múltiplos critérios e ordenação instável | documentado |
 | DIV-04 | CI/CD / Android | Capacitor CLI 7+ falha no GitHub Actions por exigir Node >= 22 | resolvido |
 | DIV-05 | CI/CD / Android | Capacitor 7 exige JDK 21 para compilação (error: invalid source release: 21) | resolvido |
+| DIV-06 | Mobile / PDF | Exportação de PDF com window.open direciona para o Chrome e trava retorno | resolvido |
+
+---
+
+## DIV-06 — Exportação de PDF com window.open redireciona para o Chrome no Android
+
+**Sintoma:** Ao tentar exportar relatório no app Android compilado com Capacitor, a tela abre em branco e redireciona forçadamente para o Google Chrome, tirando o usuário do aplicativo e impedindo o retorno.
+
+**Causa raiz:** O método `window.open('', '_blank')` com `printWindow.print()` força o WebView nativo do Android a chamar a intent do navegador externo do sistema (Chrome) para lidar com a janela.
+
+**Fix:**
+1. Substituir a geração via HTML impresso por geração vetorial client-side em memória com `jspdf`.
+2. Realizar download direto do binário `.pdf` no dispositivo com `doc.save('RockGol_2026_Relatorio.pdf')`.
+3. Oferecer modal nativo perguntando se deseja compartilhar os resultados via WhatsApp, integrando com o plugin `@capacitor/share` e fallback URL intent do WhatsApp, mantendo o usuário 100% dentro do aplicativo.
+
+**Onde aplica:** `src/services/pdfExportService.ts` e `src/components/ExportTab.tsx`.
 
 ---
 

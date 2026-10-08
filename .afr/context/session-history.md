@@ -5,6 +5,25 @@ project: "Rockgol - São Patrício"
 
 # Histórico de Sessões — Rockgol - São Patrício
 
+## [2026-10-08] Correção da Exportação de PDF Nativo e Compartilhamento via WhatsApp
+- **Objetivo da Sessão:** Corrigir a exportação de relatório para que o PDF seja baixado diretamente no celular sem abrir ou redirecionar para o Google Chrome, permitindo que o usuário permaneça dentro do aplicativo e possa optar por compartilhar o resumo formatado via WhatsApp.
+- **Vínculo à Task:** FEAT-2026-10-001 (Exportação & Distribuição Mobile)
+- **Atividades Realizadas:**
+  - Diagnóstico da causa-raiz do redirecionamento para o Chrome: uso de `window.open` e `print()` em WebViews Android (documentado em `DIV-06`).
+  - Instalação e integração da biblioteca `jspdf` para construção do documento vetorial `.pdf` A4 em memória.
+  - Implementação do design vetorial do relatório com cores oficiais do torneio (`#0B1320`, `#00D26A`), tabela completa de classificação com destaque G4 e chaveamento de mata-mata.
+  - Download nativo direto acionado via `doc.save('RockGol_2026_Relatorio_YYYY-MM-DD.pdf')`.
+  - Instalação do plugin `@capacitor/share` e sincronização no Android (`npx cap sync android`).
+  - Criação de modal nativo embutido no app após a geração do PDF, perguntando se o usuário deseja compartilhar a tabela e resultados com os grupos pelo WhatsApp.
+  - Validação de compilação TypeScript e Vite (`npm run build`) com 0 erros.
+  - Execução e aprovação de 100% dos testes unitários (32 testes em 8 suites passando).
+  - Sincronização dos novos web assets e plugins na pasta nativa `android/`.
+- **Decisões Tomadas:**
+  - Eliminar completamente qualquer chamada a `window.open` ou `print()`.
+  - Download ocorre silenciosamente para a pasta de Downloads do dispositivo enquanto o usuário permanece na mesma tela do app com feedback visual claro e modal de compartilhamento opcional.
+- **Próximos Passos:**
+  - Realizar commit e push das alterações para que a esteira do GitHub Actions gere o novo APK atualizado.
+
 ## [2026-10-08] Configuração do Capacitor Android e Pipeline CI/CD de Build do APK
 - **Objetivo da Sessão:** Configurar a estrutura nativa Android (Capacitor) e a esteira de CI/CD via GitHub Actions para compilação automatizada do APK Android (`app-debug.apk`) na nuvem sem sobrecarregar a máquina local.
 - **Vínculo à Task:** FEAT-2026-10-001 (Empacotamento Nativo Android & Distribuição APK)

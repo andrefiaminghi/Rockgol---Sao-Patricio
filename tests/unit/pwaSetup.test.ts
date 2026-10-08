@@ -8,8 +8,9 @@ describe('Exportação PDF, Backup e Integração Geral (App & ExportTab)', () =
     expect(ExportTabModule.ExportTab).toBeDefined();
   });
 
-  it('deve exportar o serviço de geração de documento/PDF', () => {
-    expect(PdfServiceModule.generateTournamentReportHtml).toBeDefined();
+  it('deve exportar o serviço de geração de documento/PDF e compartilhamento', () => {
+    expect(PdfServiceModule.generateAndDownloadTournamentPdf).toBeDefined();
+    expect(PdfServiceModule.shareReportToWhatsApp).toBeDefined();
   });
 
   it('deve exportar o componente principal App', () => {
