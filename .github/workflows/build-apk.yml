@@ -1,0 +1,52 @@
+name: Build Android APK (RockGol 2026)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Compilar APK Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17 (JDK)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar Dependências do Projeto
+        run: npm ci
+
+      - name: Compilar Frontend de Produção (Vite)
+        run: npm run build
+
+      - name: Sincronizar com Projeto Android (Capacitor)
+        run: npx cap sync android
+
+      - name: Conceder permissão de execução ao Gradle
+        run: chmod +x android/gradlew
+
+      - name: Compilar APK Android (Debug)
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Disponibilizar APK para Download
+        uses: actions/upload-artifact@v4
+        with:
+          name: RockGol-2026-Debug-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

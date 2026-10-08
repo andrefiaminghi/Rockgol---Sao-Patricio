@@ -26,3 +26,12 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Android Build
+android/.gradle/
+android/app/build/
+android/build/
+android/.idea/
+android/*.iml
+android/app/*.iml
+local.properties

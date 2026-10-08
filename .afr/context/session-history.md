@@ -1,9 +1,25 @@
 ---
-last_updated: "2026-10-08T19:50:00-03:00"
+last_updated: "2026-10-08T20:00:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
+
+## [2026-10-08] Configuração do Capacitor Android e Pipeline CI/CD de Build do APK
+- **Objetivo da Sessão:** Configurar a estrutura nativa Android (Capacitor) e a esteira de CI/CD via GitHub Actions para compilação automatizada do APK Android (`app-debug.apk`) na nuvem sem sobrecarregar a máquina local.
+- **Vínculo à Task:** FEAT-2026-10-001 (Empacotamento Nativo Android & Distribuição APK)
+- **Atividades Realizadas:**
+  - Instalação dos pacotes do Capacitor (`@capacitor/core`, `@capacitor/cli`, `@capacitor/android`).
+  - Criação do `capacitor.config.json` com `appId: com.saopatricio.rockgol2026`, `appName: RockGol 2026` e `webDir: dist`.
+  - Inicialização da plataforma nativa Android via `npx cap add android` gerando a pasta `android/` com Gradle e AndroidManifest.
+  - Sincronização dos web assets compilados (`dist/`) com o projeto nativo via `npx cap sync android`.
+  - Criação do workflow do GitHub Actions em `.github/workflows/build-apk.yml` com trigger manual (`workflow_dispatch`) e automático (`push main`), configurando Java 17, Node 20, compilação de produção e Gradle assembleDebug, disponibilizando o arquivo `RockGol-2026-Debug-APK` como artefato para download.
+  - Atualização do `.gitignore` para ignorar caches do Gradle e pastas temporárias de build do Android.
+  - Validação de 100% dos testes unitários (32/32) e integridade da build.
+- **Decisões Tomadas:**
+  - Compilação do APK delegada para o GitHub Actions na nuvem conforme escolha do usuário.
+- **Próximos Passos:**
+  - Usuário faz o push para o GitHub e baixa o APK gerado na aba Actions.
 
 ## [2026-10-08] Reformulação Visual Completa e Alinhamento com o Layout Oficial (exemplodesing.jpeg)
 - **Objetivo da Sessão:** Atender à solicitação do usuário para reformular radicalmente o design do app, aplicando fielmente a identidade visual e layout fornecidos em `exemplodesing.jpeg` e os padrões canônicos da AFR.

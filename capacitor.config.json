@@ -1,0 +1,8 @@
+{
+  "appId": "com.saopatricio.rockgol2026",
+  "appName": "RockGol 2026",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
