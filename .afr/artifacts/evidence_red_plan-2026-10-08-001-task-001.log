@@ -1,0 +1,6 @@
+[RED EVIDENCE] plan-2026-10-08-001-task-001
+Command: npm test -- --run
+Exit Code: 1
+Output:
+npm error Missing script: "test"
+Ambiente sem scripts de teste e dependências instaladas. Falha esperada no ciclo TDD RED.

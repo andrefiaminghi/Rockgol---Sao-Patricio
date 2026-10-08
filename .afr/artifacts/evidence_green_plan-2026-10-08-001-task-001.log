@@ -1,0 +1,9 @@
+[GREEN EVIDENCE] plan-2026-10-08-001-task-001
+Command: npm test -- --run
+Exit Code: 0
+Output:
+ RUN  v3.2.7 C:/Users/André Ribeiro/Documents/GitHub/Rockgol---Sao-Patricio
+ ✓ tests/unit/setup.test.ts (1 test) 2ms
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+Ambiente Vitest e React 19 configurado com 100% de testes verdes.

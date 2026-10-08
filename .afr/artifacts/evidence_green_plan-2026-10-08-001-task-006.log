@@ -1,0 +1,9 @@
+[GREEN EVIDENCE] plan-2026-10-08-001-task-006
+Command: npm test -- tests/unit/uiComponents.test.ts --run
+Exit Code: 0
+Output:
+ RUN  v3.2.7 C:/Users/André Ribeiro/Documents/GitHub/Rockgol---Sao-Patricio
+ ✓ tests/unit/uiComponents.test.ts (2 tests) 2ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+Componentes Header, Navigation, MatchesTab, TeamsTab e PlayerModal construídos e exportados com sucesso.

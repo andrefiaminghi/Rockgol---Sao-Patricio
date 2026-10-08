@@ -1,0 +1,11 @@
+[AUDIT APPROVED] plan-2026-10-08-001-task-008
+Auditor: afr-tdd:adversarial-auditor
+Status: APPROVED
+Verification:
+- ExportTab implementada com exportação em PDF e Backup/Restauração de JSON
+- pdfExportService gera janela de impressão formatada com logotipo oficial, tabela da 1ª fase e mata-mata
+- public/manifest.json e public/sw.js devidamente configurados para PWA offline
+- App.tsx integrando todas as 5 abas com reatividade e auto-save no LocalStorage
+- Build de produção (npm run build) concluído com código 0 e sem warnings
+- 100% dos testes unitários passando (32/32)
+- Zero regressões

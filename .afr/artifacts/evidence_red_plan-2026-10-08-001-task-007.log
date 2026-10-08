@@ -1,0 +1,6 @@
+[RED EVIDENCE] plan-2026-10-08-001-task-007
+Command: npm test -- tests/unit/standingsUi.test.ts --run
+Exit Code: 1
+Output:
+Error: Cannot find module '../../src/components/StandingsTab'
+Falha esperada no ciclo RED: componentes StandingsTab e KnockoutTab ainda não implementados.

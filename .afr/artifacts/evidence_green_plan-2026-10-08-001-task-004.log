@@ -1,0 +1,9 @@
+[GREEN EVIDENCE] plan-2026-10-08-001-task-004
+Command: npm test -- tests/unit/knockoutService.test.ts --run
+Exit Code: 0
+Output:
+ RUN  v3.2.7 C:/Users/André Ribeiro/Documents/GitHub/Rockgol---Sao-Patricio
+ ✓ tests/unit/knockoutService.test.ts (4 tests) 2ms
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+Chaveamento de Semifinais (1ºx4º no Campo 1 e 2ºx3º no Campo 2), validação de pênaltis em empates e propagação automática de vencedores/perdedores para Final e 3º Lugar 100% comprovados.

@@ -1,0 +1,6 @@
+[RED EVIDENCE] plan-2026-10-08-001-task-004
+Command: npm test -- tests/unit/knockoutService.test.ts --run
+Exit Code: 1
+Output:
+Error: Cannot find module '../../src/services/knockoutService'
+Falha esperada no ciclo RED: módulo knockoutService ainda não implementado.

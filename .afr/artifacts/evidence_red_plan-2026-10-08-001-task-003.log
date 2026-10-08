@@ -1,0 +1,6 @@
+[RED EVIDENCE] plan-2026-10-08-001-task-003
+Command: npm test -- tests/unit/standingsService.test.ts --run
+Exit Code: 1
+Output:
+Error: Cannot find module '../../src/services/standingsService'
+Falha esperada no ciclo RED: módulo standingsService ainda não implementado.

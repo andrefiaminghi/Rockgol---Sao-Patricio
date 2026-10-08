@@ -1,0 +1,9 @@
+[GREEN EVIDENCE] plan-2026-10-08-001-task-005
+Command: npm test -- tests/unit/backupService.test.ts --run
+Exit Code: 0
+Output:
+ RUN  v3.2.7 C:/Users/André Ribeiro/Documents/GitHub/Rockgol---Sao-Patricio
+ ✓ tests/unit/backupService.test.ts (6 tests) 3ms
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+Exportação formatada, importação válida e rejeição rigorosa de backups corrompidos/incompletos 100% comprovados.

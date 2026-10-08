@@ -1,0 +1,8 @@
+[AUDIT APPROVED] plan-2026-10-08-001-task-006
+Auditor: afr-tdd:adversarial-auditor
+Status: APPROVED
+Verification:
+- MatchesTab exibe as 11 rodadas verticalmente com campos, horários, times de folga e banner de almoço
+- TeamsTab lista as 7 equipes com abertura do PlayerModal para 10 atletas
+- Navigation e Header fornecem experiência móvel ergonômica com logotipo oficial
+- Zero warnings críticos

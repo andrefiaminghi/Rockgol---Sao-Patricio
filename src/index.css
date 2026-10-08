@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #0B1320;
+    --bg-card: #121D2F;
+    --bg-card-hover: #16243A;
+    --bg-subtle: #0E1726;
+    --border-subtle: #1E2D44;
+    --border-highlight: #2A3E5E;
+    --accent-green: #00D26A;
+    --accent-green-hover: #00B85C;
+    --accent-red: #EF4444;
+    --text-primary: #FFFFFF;
+    --text-secondary: #8B9BB4;
+    --text-muted: #5D6E87;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #0B1320;
+    color: #FFFFFF;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1, h2, h3, h4, th {
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0B1320;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E2D44;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2A3E5E;
+}
+
+/* Safe Area Insets */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0.5rem);
+}

@@ -1,0 +1,9 @@
+[AUDIT APPROVED] plan-2026-10-08-001-task-004
+Auditor: afr-tdd:adversarial-auditor
+Status: APPROVED
+Verification:
+- generateSemifinals mapeia exatamente 1ºx4º em SF1 e 2ºx3º em SF2
+- resolveKnockoutMatch barra empates em tempo normal sem pênaltis ou com pênaltis iguais
+- updateFinalsFromSemifinals projeta finalistas e disputa de 3º lugar sem distorção
+- Testes unitários cobrem casos de sucesso, borda e erro
+- Zero regressões

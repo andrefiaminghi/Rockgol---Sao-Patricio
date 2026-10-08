@@ -1,0 +1,8 @@
+[AUDIT APPROVED] plan-2026-10-08-001-task-002
+Auditor: afr-tdd:adversarial-auditor
+Status: APPROVED
+Verification:
+- src/types/tournament.ts define tipos completos (Team, Match, KnockoutMatch, TeamStanding, TournamentState)
+- src/data/initialTournamentData.ts define INITIAL_TEAMS, ROUND_RESTING_TEAMS, INITIAL_MATCHES e INITIAL_KNOCKOUT_MATCHES
+- 8 testes cobrem distribuição de rodadas, turno único, folgas e igualdade de jogos por time
+- Zero inconsistências perante a Tabela_Rock_Gol_2026.docx

@@ -1,0 +1,9 @@
+[GREEN EVIDENCE] plan-2026-10-08-001-task-003
+Command: npm test -- tests/unit/standingsService.test.ts --run
+Exit Code: 0
+Output:
+ RUN  v3.2.7 C:/Users/André Ribeiro/Documents/GitHub/Rockgol---Sao-Patricio
+ ✓ tests/unit/standingsService.test.ts (7 tests) 17ms
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+Lógica de cálculo de pontuação, partidas não computadas quando PENDING, vitórias, empates, e desempate por confronto direto e saldo de gols 100% comprovados.

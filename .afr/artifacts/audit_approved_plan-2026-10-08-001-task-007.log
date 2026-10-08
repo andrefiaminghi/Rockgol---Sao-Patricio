@@ -1,0 +1,8 @@
+[AUDIT APPROVED] plan-2026-10-08-001-task-007
+Auditor: afr-tdd:adversarial-auditor
+Status: APPROVED
+Verification:
+- StandingsTab destaca G4 e exibe tabela ao vivo com critérios de desempate
+- KnockoutTab bloqueia chaveamento antes da 1ª fase terminar e libera quando completa
+- KnockoutScoreModal exige e valida pênaltis em empates
+- Zero regressões

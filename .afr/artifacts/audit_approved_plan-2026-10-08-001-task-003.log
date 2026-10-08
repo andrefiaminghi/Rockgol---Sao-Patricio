@@ -1,0 +1,8 @@
+[AUDIT APPROVED] plan-2026-10-08-001-task-003
+Auditor: afr-tdd:adversarial-auditor
+Status: APPROVED
+Verification:
+- calculateStandings implementa a hierarquia estrita: Pontos > Vitórias > Saldo > Gols Pró > Confronto Direto > Gols Sofridos > Alfabético
+- isGroupStageCompleted valida exatamente 21 jogos finalizados
+- 7 testes unitários exaustivos passam com sucesso
+- Zero vazamentos de estado ou efeitos colaterais

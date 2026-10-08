@@ -1,0 +1,9 @@
+[GREEN EVIDENCE] plan-2026-10-08-001-task-002
+Command: npm test -- tests/unit/initialData.test.ts --run
+Exit Code: 0
+Output:
+ RUN  v3.2.7 C:/Users/André Ribeiro/Documents/GitHub/Rockgol---Sao-Patricio
+ ✓ tests/unit/initialData.test.ts (8 tests) 5ms
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+7 equipes oficiais, 21 jogos da 1ª fase, horários, campos e 4 jogos eliminatórios validados com 100% de sucesso.
