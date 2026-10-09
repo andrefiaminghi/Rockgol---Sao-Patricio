@@ -20,6 +20,7 @@ interface ScoresheetTabProps {
   matches: Match[];
   knockoutMatches: KnockoutMatch[];
   scoresheets: Record<string, MatchScoresheet>;
+  readOnly?: boolean;
   onSaveScoresheet: (sheet: MatchScoresheet) => void;
   onDeleteScoresheet: (matchId: string) => void;
 }
@@ -31,6 +32,7 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
   matches,
   knockoutMatches,
   scoresheets,
+  readOnly = false,
   onSaveScoresheet,
   onDeleteScoresheet
 }) => {
@@ -296,84 +298,159 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
                       </div>
                     )}
 
-                  {/* Resumo da Súmula se houver */}
-                  {hasSheet && sheet && (
-                    <div className="mt-2.5 pt-2 border-t border-[#2F343C] text-[11px] text-[#8F99A8] space-y-1">
-                      {sheet.goals.length > 0 && (
-                        <div className="flex items-start gap-1">
-                          <span className="shrink-0">⚽</span>
-                          <span className="text-white truncate">
-                            {sheet.goals
-                              .map(g => {
-                                if (g.isOwnGoal) return 'Gol Contra (GC)';
-                                const team = teamMap.get(g.teamId);
-                                const rawName = g.playerIndex !== null ? team?.players[g.playerIndex]?.trim() : null;
-                                return rawName ? `#${g.playerIndex! + 1} ${rawName}` : g.playerName;
-                              })
-                              .join(', ')}
-                          </span>
-                        </div>
-                      )}
-                      {sheet.cards.length > 0 && (
-                        <div className="flex items-start gap-1">
-                          <span className="shrink-0">🟨</span>
-                          <span className="truncate">
-                            {sheet.cards
-                              .map(c => {
-                                const team = teamMap.get(c.teamId);
-                                const rawName = team?.players[c.playerIndex]?.trim();
-                                const name = rawName ? `#${c.playerIndex + 1} ${rawName}` : c.playerName;
-                                return `${c.cardType === 'RED' ? '🟥' : '🟨'} ${name}`;
-                              })
-                              .join(', ')}
-                          </span>
-                        </div>
-                      )}
-                      {sheet.observations && (
-                        <p className="italic text-[#8F99A8]/80 line-clamp-1">
-                          "${sheet.observations}"
-                        </p>
-                      )}
-                    </div>
-                  )}
+                  {/* Resumo da Súmula separado por equipe (Esquerda e Direita) */}
+                  {hasSheet && sheet && (() => {
+                    const homeGoals = sheet.goals.filter(g => g.teamId === m.homeTeamId);
+                    const awayGoals = sheet.goals.filter(g => g.teamId === m.awayTeamId);
+                    const homeCards = sheet.cards.filter(c => c.teamId === m.homeTeamId);
+                    const awayCards = sheet.cards.filter(c => c.teamId === m.awayTeamId);
+                    const hasAnyEvents = homeGoals.length > 0 || awayGoals.length > 0 || homeCards.length > 0 || awayCards.length > 0;
 
-                  {/* Botões de Ação da Súmula */}
-                  <div className="mt-3 pt-2 flex items-center justify-end gap-2">
-                    {hasSheet && (
+                    return (
+                      <div className="mt-2.5 pt-2 border-t border-[#2F343C] text-[11px] text-[#8F99A8]">
+                        {hasAnyEvents ? (
+                          <div className="grid grid-cols-2 gap-3 divide-x divide-[#2F343C]/60">
+                            {/* Lado Esquerdo: Time da Esquerda (Mandante) */}
+                            <div className="space-y-1 pr-1 text-left min-w-0">
+                              {homeGoals.length > 0 && (
+                                <div className="space-y-0.5">
+                                  {homeGoals.map((g, idx) => {
+                                    const rawName = g.playerIndex !== null ? homeTeam?.players[g.playerIndex]?.trim() : null;
+                                    const name = g.isOwnGoal
+                                      ? 'Gol Contra (GC)'
+                                      : rawName
+                                      ? `#${g.playerIndex! + 1} ${rawName}`
+                                      : g.playerName;
+
+                                    return (
+                                      <div key={idx} className="flex items-center gap-1.5 text-white">
+                                        <span className="shrink-0 text-[10px]">⚽</span>
+                                        <span className={`truncate text-xs ${g.isOwnGoal ? 'text-amber-400 font-medium' : 'font-medium'}`}>
+                                          {name}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+
+                              {homeCards.length > 0 && (
+                                <div className="space-y-0.5">
+                                  {homeCards.map((c, idx) => {
+                                    const rawName = homeTeam?.players[c.playerIndex]?.trim();
+                                    const name = rawName ? `#${c.playerIndex + 1} ${rawName}` : c.playerName;
+
+                                    return (
+                                      <div key={idx} className="flex items-center gap-1.5 text-xs">
+                                        <span className="shrink-0 text-[10px]">{c.cardType === 'RED' ? '🟥' : '🟨'}</span>
+                                        <span className={`truncate ${c.cardType === 'RED' ? 'text-red-400 font-bold' : 'text-amber-300 font-medium'}`}>
+                                          {name}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Lado Direito: Time da Direita (Visitante) */}
+                            <div className="space-y-1 pl-3 text-right min-w-0">
+                              {awayGoals.length > 0 && (
+                                <div className="space-y-0.5">
+                                  {awayGoals.map((g, idx) => {
+                                    const rawName = g.playerIndex !== null ? awayTeam?.players[g.playerIndex]?.trim() : null;
+                                    const name = g.isOwnGoal
+                                      ? 'Gol Contra (GC)'
+                                      : rawName
+                                      ? `#${g.playerIndex! + 1} ${rawName}`
+                                      : g.playerName;
+
+                                    return (
+                                      <div key={idx} className="flex items-center justify-end gap-1.5 text-white">
+                                        <span className={`truncate text-xs ${g.isOwnGoal ? 'text-amber-400 font-medium' : 'font-medium'}`}>
+                                          {name}
+                                        </span>
+                                        <span className="shrink-0 text-[10px]">⚽</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+
+                              {awayCards.length > 0 && (
+                                <div className="space-y-0.5">
+                                  {awayCards.map((c, idx) => {
+                                    const rawName = awayTeam?.players[c.playerIndex]?.trim();
+                                    const name = rawName ? `#${c.playerIndex + 1} ${rawName}` : c.playerName;
+
+                                    return (
+                                      <div key={idx} className="flex items-center justify-end gap-1.5 text-xs">
+                                        <span className={`truncate ${c.cardType === 'RED' ? 'text-red-400 font-bold' : 'text-amber-300 font-medium'}`}>
+                                          {name}
+                                        </span>
+                                        <span className="shrink-0 text-[10px]">{c.cardType === 'RED' ? '🟥' : '🟨'}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-0.5 text-[10px] text-[#5D6E87] italic">
+                            Sem gols ou cartões registrados
+                          </div>
+                        )}
+
+                        {/* Observações da Súmula */}
+                        {sheet.observations && (
+                          <p className="mt-2 pt-1.5 border-t border-[#2F343C]/40 italic text-[10px] text-[#8F99A8]/80 text-center line-clamp-2">
+                            "{sheet.observations}"
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Botões de Ação da Súmula (Apenas Arbitragem) */}
+                  {!readOnly && (
+                    <div className="mt-3 pt-2 flex items-center justify-end gap-2">
+                      {hasSheet && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (
+                              confirm(
+                                'Deseja realmente limpar a súmula desta partida? Os placares na aba Súmula e na aba Jogos serão zerados.'
+                              )
+                            ) {
+                              onDeleteScoresheet(m.id);
+                            }
+                          }}
+                          className="text-xs font-bold px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20"
+                          title="Limpar Súmula e Zerar Placar"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Limpar</span>
+                        </button>
+                      )}
                       <button
                         type="button"
-                        onClick={() => {
-                          if (
-                            confirm(
-                              'Deseja realmente limpar a súmula desta partida? Os placares na aba Súmula e na aba Jogos serão zerados.'
-                            )
-                          ) {
-                            onDeleteScoresheet(m.id);
-                          }
-                        }}
-                        className="text-xs font-bold px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20"
-                        title="Limpar Súmula e Zerar Placar"
+                        disabled={!homeTeam || !awayTeam}
+                        onClick={() => setActiveModalMatch(m)}
+                        className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
+                          !homeTeam || !awayTeam
+                            ? 'bg-[#2F343C]/40 text-[#8F99A8]/40 cursor-not-allowed'
+                            : hasSheet
+                            ? 'bg-[#2F343C] hover:bg-[#383E47] text-white border border-[#383E47]'
+                            : 'bg-[#00D26A] hover:bg-[#00B85C] text-[#0B1320] shadow-md shadow-[#00D26A]/20'
+                        }`}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Limpar</span>
+                        <ClipboardList className="w-3.5 h-3.5" />
+                        <span>{hasSheet ? 'Editar Súmula' : 'Preencher Súmula'}</span>
                       </button>
-                    )}
-                    <button
-                      type="button"
-                      disabled={!homeTeam || !awayTeam}
-                      onClick={() => setActiveModalMatch(m)}
-                      className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
-                        !homeTeam || !awayTeam
-                          ? 'bg-[#2F343C]/40 text-[#8F99A8]/40 cursor-not-allowed'
-                          : hasSheet
-                          ? 'bg-[#2F343C] hover:bg-[#383E47] text-white border border-[#383E47]'
-                          : 'bg-[#00D26A] hover:bg-[#00B85C] text-[#0B1320] shadow-md shadow-[#00D26A]/20'
-                      }`}
-                    >
-                      <ClipboardList className="w-3.5 h-3.5" />
-                      <span>{hasSheet ? 'Editar Súmula' : 'Preencher Súmula'}</span>
-                    </button>
-                  </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -485,8 +562,8 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
         </div>
       )}
 
-      {/* Modal de Súmula */}
-      {activeModalMatch && modalTeams && (
+      {/* Modal de Súmula (Apenas Arbitragem) */}
+      {!readOnly && activeModalMatch && modalTeams && (
         <ScoresheetModal
           match={activeModalMatch}
           homeTeam={modalTeams.homeTeam}

@@ -133,6 +133,35 @@ describe('ScoresheetService — Regras de Negócio, Sincronização e Disciplina
       expect(match2?.homeScore).toBe(3);
       expect(match2?.awayScore).toBe(1);
     });
+
+    it('deve resetar partidas não sumarizadas quando resetUnscheduledMatches for true, mantendo somente jogos do servidor', () => {
+      // Simulação: match-2 tinha placar manual (3x1) mas NÃO está no servidor/scoresheets
+      // match-1 possui súmula oficial no servidor (1x0)
+      const scoresheets: Record<string, MatchScoresheet> = {
+        'match-1': {
+          matchId: 'match-1',
+          hasScoresheet: true,
+          goals: [{ id: 'g1', teamId: 'team-1', playerIndex: 0, playerName: 'Jogador 1' }],
+          cards: [],
+          observations: '',
+          updatedAt: new Date().toISOString()
+        }
+      };
+
+      const result = syncMatchScoresFromScoresheets(mockMatches, mockKnockoutMatches, scoresheets, true);
+
+      // match-1 deve assumir placar oficial da súmula
+      const m1 = result.matches.find(m => m.id === 'match-1');
+      expect(m1?.homeScore).toBe(1);
+      expect(m1?.awayScore).toBe(0);
+      expect(m1?.status).toBe('FINISHED');
+
+      // match-2 tinha placar manual 3x1 mas sem súmula no servidor -> deve ser resetado para null
+      const m2 = result.matches.find(m => m.id === 'match-2');
+      expect(m2?.homeScore).toBeNull();
+      expect(m2?.awayScore).toBeNull();
+      expect(m2?.status).toBe('PENDING');
+    });
   });
 
   describe('2. Apuração de Artilharia (getTopScorers)', () => {

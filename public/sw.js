@@ -1,8 +1,10 @@
-const CACHE_NAME = 'rockgol-cache-v2';
+const CACHE_NAME = 'rockgol-cache-v3';
 const PRECACHE_ASSETS = [
   './',
   './index.html',
+  './juiz.html',
   './manifest.json',
+  './manifest-juiz.json',
   './logotipoapp.jpg',
   './icon-192.png',
   './icon-512.png'
@@ -38,6 +40,33 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   if (!event.request.url.startsWith('http')) return;
 
+  // Para navegação e documentos HTML: estratégia Network-First
+  // Garante que o usuário receba imediatamente as atualizações quando online,
+  // mantendo o suporte offline transparente via cache quando sem conexão.
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then(networkResponse => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseToCache);
+              cache.put('./index.html', responseToCache.clone());
+              cache.put('./', responseToCache.clone());
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(event.request).then(cachedResponse => {
+            return cachedResponse || caches.match('./index.html') || caches.match('./');
+          });
+        })
+    );
+    return;
+  }
+
+  // Para assets estáticos com hash e recursos adicionais: Cache-First com fallback de rede
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
       if (cachedResponse) {
@@ -49,20 +78,13 @@ self.addEventListener('fetch', event => {
           return networkResponse;
         }
 
-        // Cache dinâmico de recursos estáticos compilados (JS, CSS, fontes e imagens)
+        // Cache dinâmico de recursos estáticos compilados
         const responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then(cache => {
           cache.put(event.request, responseToCache);
         });
 
         return networkResponse;
-      }).catch(() => {
-        // Fallback offline para navegação
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html').then(fallback => {
-            return fallback || caches.match('./');
-          });
-        }
       });
     })
   );

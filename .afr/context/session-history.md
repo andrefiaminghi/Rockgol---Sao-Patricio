@@ -1,9 +1,89 @@
 ---
-last_updated: "2026-10-09T13:48:00-03:00"
+last_updated: "2026-10-09T16:13:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
+
+## [2026-10-09] Reset de Placares Manuais na Sincronização (Preservando Somente Dados do Servidor)
+- **Objetivo da Sessão:** Atender à solicitação de que, ao sincronizar o aplicativo (Supabase), qualquer placar preenchido manualmente ou simulado localmente na aba Jogos seja resetado, mantendo estritamente os placares com súmula oficial registrada no servidor.
+- **Vínculo à Task:** FEAT-2026-10-005 (Integridade e Sincronismo Fidedigno de Dados)
+- **Atividades Realizadas:**
+  - **Serviço de Súmula (`scoresheetService.ts`):**
+    - Adicionado suporte ao parâmetro booleano `resetUnscheduledMatches = false` em `syncMatchScoresFromScoresheets`.
+    - Quando ativado, qualquer partida que não possua súmula oficial no servidor é resetada para `homeScore: null, awayScore: null, status: 'PENDING'`.
+    - No mata-mata, partidas sem súmula também têm placares, penalidades e vencedores zerados.
+  - **Fluxo de Sincronização (`App.tsx`):**
+    - Ao disparar `handleSync()`, a sincronização passa `resetUnscheduledMatches: true`.
+    - A classificação oficial é recalculada com base exclusivamente nas partidas sincronizadas.
+    - O chaveamento de mata-mata é atualizado: se a fase de grupos oficial do servidor ainda não estiver concluída, os confrontos de semifinal e final retornam para o estado pendente/a definir.
+  - **Testes Automatizados:** Adicionado teste unitário em [`tests/unit/scoresheetService.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetService.test.ts) comprovando que partidas simuladas sem súmula são zeradas e partidas oficiais são preservadas.
+  - **Verificação:** 92/92 testes aprovados no Vitest (`npm test`) e compilação de produção (`npm run build`) validada sem erros.
+
+## [2026-10-09] Separação Bilateral de Gols e Cartões por Equipe nos Cards da Súmula
+- **Objetivo da Sessão:** Atender à solicitação de exibir os gols e cartões da súmula separados por equipe nos cards de partida da aba Súmula, dividindo a área inferior em duas colunas correspondentes às equipes do placar (lado esquerdo para o time mandante/esquerda e lado direito para o time visitante/direita).
+- **Vínculo à Task:** FEAT-2026-10-004 (UX e Layout Bilateral da Súmula)
+- **Atividades Realizadas:**
+  - **Componente `ScoresheetTab.tsx`:**
+    - Substituída a listagem única de eventos por um grid de 2 colunas com divisor sutil (`divide-x divide-[#2F343C]/60`).
+    - Lado Esquerdo: lista gols e cartões do mandante (`teamId === m.homeTeamId`), alinhados à esquerda.
+    - Lado Direito: lista gols e cartões do visitante (`teamId === m.awayTeamId`), alinhados à direita e espelhados.
+    - Observações mantidas centralizadas abaixo das duas colunas.
+    - Caso não haja gols/cartões, exibe indicação discreta de partida sem eventos.
+  - **Testes Automatizados:** Atualizado [`tests/unit/scoresheetTab.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetTab.test.ts) validando a estrutura e os dados de eventos.
+  - **Verificação:** 91/91 testes aprovados no Vitest (`npm test`) e compilação de produção (`npm run build`) validada sem erros.
+
+## [2026-10-09] Execução TDD: Sincronismo Supabase e PWAs Independentes (Juiz e Torcida)
+- **Objetivo da Sessão:** Executar integralmente o plano `plan-2026-10-09-003` (Tasks 001 a 005) com metodologia estrita TDD, integrando a persistência na nuvem com o Supabase e separando a aplicação em dois PWAs no mesmo repositório: PWA Juiz (`juiz.html`) e PWA Torcida (`index.html`).
+- **Vínculo à Task:** FEAT-2026-10-003 (Sincronismo Supabase e PWAs Independentes)
+- **Tasks Executadas e Commits:**
+  1. **Task 001 (`9391226`):** `feat(sync): implementar servico de sincronizacao com supabase e fallback offline`
+     - Instalado `@supabase/supabase-js`.
+     - Implementado [`src/services/supabaseService.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/services/supabaseService.ts) com client Supabase oficial (`ihegprwkrmybdrpgodnf`), métodos `pushScoresheetToSupabase`, `deleteScoresheetFromSupabase`, `pushTeamToSupabase` e `pullTournamentFromSupabase`.
+     - Criada migration SQL PostgreSQL em [`supabase/migrations/20261009180000_create_rockgol_sync_tables.sql`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/supabase/migrations/20261009180000_create_rockgol_sync_tables.sql).
+     - Testes unitários em [`tests/unit/supabaseService.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/supabaseService.test.ts).
+  2. **Task 002 (`c145739`):** `feat(pwa): configurar suporte multi-page para app torcida e app arbitro`
+     - Configurado Vite multi-page em [`vite.config.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/vite.config.ts) com entrypoints `index.html` e `juiz.html`.
+     - Criados [`public/manifest-juiz.json`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/public/manifest-juiz.json), [`juiz.html`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/juiz.html) e [`src/juiz.tsx`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/juiz.tsx).
+     - Service Worker [`public/sw.js`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/public/sw.js) atualizado com precache de `juiz.html` e `manifest-juiz.json`.
+     - Testes em [`tests/unit/pwaSetup.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/pwaSetup.test.ts).
+  3. **Task 003 (`2116be2`):** `feat(auth): implementar tela de desbloqueio por pin para arbitragem`
+     - Implementado [`src/components/JudgeAuthLock.tsx`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/JudgeAuthLock.tsx) com teclado touch numérico, validação do PIN padrão `2026` e persistência no `localStorage`.
+     - Guarda de autenticação integrada em [`src/App.tsx`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/App.tsx).
+     - Testes em [`tests/unit/judgeAuth.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/judgeAuth.test.ts).
+  4. **Task 004 (`76de9e3`):** `feat(permissions): aplicar restricoes de somente leitura para torcida e edicao para juizes`
+     - Modo Torcida: `readOnly={true}` propagado para `<TeamsTab />` e `<ScoresheetTab />`, bloqueando edição de nomes e ocultando botões de preenchimento, edição e limpeza de súmula.
+     - Modo Juiz: edição de elencos e preenchimento de súmula liberados com push assíncrono para o Supabase.
+     - Testes em [`tests/unit/rolePermissions.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/rolePermissions.test.ts).
+  5. **Task 005 (`5d55e4e`):** `feat(header): adicionar botao de sincronizacao supabase e indicador de status de nuvem`
+     - Atualizado [`src/components/Header.tsx`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/Header.tsx): Torcida recebe botão "Sincronizar" (sem botão Reiniciar); Juiz recebe indicador de status online/offline da nuvem e botão "Sincronizar".
+     - Integrado `pullTournamentFromSupabase` em [`src/App.tsx`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/App.tsx) com mesclagem inteligente de súmulas, recálculo de classificação e toast feedback visual.
+     - Testes em [`tests/unit/headerSync.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/headerSync.test.ts).
+- **Evidências Finais:**
+  - 90/90 testes unitários e de integração aprovados no Vitest (`npm test`).
+  - Build de produção gerado com sucesso pelo Vite (`dist/index.html` e `dist/juiz.html`).
+- **Objetivo da Sessão:** Atender à solicitação de brainstorming e avaliação da demanda documentada em `.afr/context/sinc.md`, gerando a branch de trabalho e a especificação técnica formal para integração com o Supabase e criação de dois PWAs independentes (Juiz e Torcida).
+- **Vínculo à Task:** FEAT-2026-10-003 (Sincronismo Supabase e PWAs Independentes)
+- **Atividades Realizadas:**
+  - **Nova Branch:** Criada e ativada a branch `feat/sincronismo-supabase-pwa`, com atualização em [.afr/git-preferences.md](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/.afr/git-preferences.md).
+  - **Brainstorming Estruturado:**
+    - Alinhada a arquitetura multi-page no Vite com dois entrypoints: `index.html` (Torcida) e `juiz.html` (Árbitro protegido por PIN `2026`).
+    - Definido modelo do Supabase com tabelas dedicadas `scoresheets` e `teams` com RLS anônimo e scripts SQL DDL prontos.
+    - Definido mecanismo de sincronização do Juiz (envio automático ao salvar + botão no Header para pull e contingência offline).
+    - Definido mecanismo da Torcida (somente leitura oficial, botão "Sincronizar" no Header no lugar do "Reiniciar", simulação de placares permitida apenas localmente em jogos sem súmula).
+  - **Documento Canônico de Feature:** Especificação técnica formal criada e commitada em [.afr/features/sincronismo-supabase-pwa.md](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/.afr/features/sincronismo-supabase-pwa.md).
+
+## [2026-10-09] Atualização da Estratégia de Cache do Service Worker (PWA) e GitHub Pages
+- **Objetivo da Sessão:** Diagnosticar e solucionar o problema de não atualização do PWA no GitHub Pages, onde o navegador continuava exibindo versões em cache antigo.
+- **Diagnóstico Técnico:**
+  - O workflow `deploy.yml` do GitHub Actions executou com sucesso o build do commit mais recente (`cde0de2`), e os arquivos servidos no GitHub Pages já continham o bundle atualizado.
+  - No entanto, o `public/sw.js` utilizava estratégia puramente Cache-First em todos os recursos (inclusive `index.html` e rota raiz `./`), associado a uma chave estática `rockgol-cache-v2`.
+  - Como consequência do "Cache Lock", dispositivos com o PWA ou com navegações anteriores interceptavam a requisição de inicialização e retornavam indefinidamente o `index.html` antigo do cache local, impedindo o carregamento dos novos scripts.
+- **Atividades Realizadas:**
+  - **Estratégia Network-First para Documentos (`public/sw.js`):** Modificado o evento `fetch` para usar Network-First em requisições de navegação (`request.mode === 'navigate'`) e documentos HTML, com fallback transparente para o cache offline caso o dispositivo esteja sem conexão.
+  - **Atualização da Versão de Cache:** Chave do cache incrementada para `rockgol-cache-v3`, garantindo limpeza imediata dos caches anteriores no evento `activate`.
+  - **Auto-Atualização e Reload (`src/main.tsx`):** Adicionado `registration.update()` no carregamento e listener de `controllerchange` para recarregar a aplicação de forma limpa e imediata assim que um novo Service Worker for ativado.
+  - **Verificação Completa:** 68/68 testes aprovados no Vitest (`npm test`) e compilação de produção (`npm run build`) validada sem erros.
 
 ## [2026-10-09] Bloqueio de Edição Manual de Placares na Aba Jogos Quando Súmula Estiver Registrada
 - **Objetivo da Sessão:** Atender à solicitação de que, quando uma partida possuir súmula oficial preenchida, os campos de placar na aba Jogos fiquem estritamente bloqueados para edição manual, garantindo integridade dos dados registrados pela arbitragem.

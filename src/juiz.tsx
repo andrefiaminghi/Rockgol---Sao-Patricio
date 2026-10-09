@@ -5,7 +5,7 @@ import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <App role="juiz" />
   </React.StrictMode>
 );
 
@@ -15,15 +15,13 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
     navigator.serviceWorker
       .register('./sw.js')
       .then(registration => {
-        // Verifica se há uma versão atualizada do sw.js no servidor
         registration.update();
       })
       .catch(error => {
-        console.log('Falha ao registrar Service Worker:', error);
+        console.log('Falha ao registrar Service Worker do Juiz:', error);
       });
   });
 
-  // Quando o novo Service Worker ativa e assume o controle, recarrega a página automaticamente
   let isRefreshing = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (!isRefreshing) {

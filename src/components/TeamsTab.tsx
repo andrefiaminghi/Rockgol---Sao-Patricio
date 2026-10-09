@@ -5,10 +5,11 @@ import { PlayerModal } from './PlayerModal';
 
 interface TeamsTabProps {
   teams: Team[];
+  readOnly?: boolean;
   onUpdatePlayers: (teamId: string, players: string[]) => void;
 }
 
-export const TeamsTab: React.FC<TeamsTabProps> = ({ teams, onUpdatePlayers }) => {
+export const TeamsTab: React.FC<TeamsTabProps> = ({ teams, readOnly = false, onUpdatePlayers }) => {
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
 
   return (
@@ -71,6 +72,7 @@ export const TeamsTab: React.FC<TeamsTabProps> = ({ teams, onUpdatePlayers }) =>
       {selectedTeam && (
         <PlayerModal
           team={selectedTeam}
+          readOnly={readOnly}
           onClose={() => setSelectedTeam(null)}
           onSave={players => {
             onUpdatePlayers(selectedTeam.id, players);

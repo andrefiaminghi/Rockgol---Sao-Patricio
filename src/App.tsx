@@ -13,6 +13,13 @@ import {
   updateFinalsFromSemifinals
 } from './services/knockoutService';
 import { syncMatchScoresFromScoresheets, removeScoresheetAndResetMatch } from './services/scoresheetService';
+import {
+  pushScoresheetToSupabase,
+  deleteScoresheetFromSupabase,
+  pushTeamToSupabase,
+  pullTournamentFromSupabase
+} from './services/supabaseService';
+import { Team } from './types/tournament';
 import { Header } from './components/Header';
 import { Navigation, TabType } from './components/Navigation';
 import { MatchesTab } from './components/MatchesTab';
@@ -22,12 +29,46 @@ import { KnockoutTab } from './components/KnockoutTab';
 import { ExportTab } from './components/ExportTab';
 import { ScoresheetTab } from './components/ScoresheetTab';
 import { IOSInstallBanner } from './components/IOSInstallBanner';
+import { JudgeAuthLock, isJudgeAuthenticated } from './components/JudgeAuthLock';
 
-export function App() {
+export interface AppProps {
+  role?: 'torcida' | 'juiz';
+}
+
+export function App({ role = 'torcida' }: AppProps = {}) {
+  const [isJudgeAuthed, setIsJudgeAuthed] = useState<boolean>(() => {
+    if (role !== 'juiz') return true;
+    return isJudgeAuthenticated();
+  });
   const [state, setState] = useState<TournamentState>(() => loadTournamentState());
   const [activeTab, setActiveTab] = useState<TabType>('matches');
   const [useDeviceFrame, setUseDeviceFrame] = useState<boolean>(true);
   const [currentTime, setCurrentTime] = useState<string>('12:00');
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState<boolean>(() =>
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Monitora conectividade com a internet
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(prev => (prev === msg ? null : prev));
+    }, 3500);
+  };
 
   // Relógio do status bar do aparelho
   useEffect(() => {
@@ -107,10 +148,18 @@ export function App() {
   // Handler para atualizar elencos
   const handleUpdatePlayers = (teamId: string, players: string[]) => {
     setState(prev => {
+      let targetTeam: Team | undefined;
       const updatedTeams = prev.teams.map(t => {
         if (t.id !== teamId) return t;
-        return { ...t, players };
+        targetTeam = { ...t, players };
+        return targetTeam;
       });
+
+      if (role === 'juiz' && targetTeam) {
+        pushTeamToSupabase(targetTeam).catch(err => {
+          console.warn('Falha no sync do time para Supabase:', err);
+        });
+      }
 
       return {
         ...prev,
@@ -146,6 +195,12 @@ export function App() {
 
   // Handler para salvar/atualizar súmula oficial
   const handleSaveScoresheet = (sheet: MatchScoresheet) => {
+    if (role === 'juiz') {
+      pushScoresheetToSupabase(sheet).catch(err => {
+        console.warn('Falha no sync da súmula para Supabase:', err);
+      });
+    }
+
     setState(prev => {
       const updatedSheets = { ...prev.scoresheets, [sheet.matchId]: sheet };
       const { matches, knockoutMatches } = syncMatchScoresFromScoresheets(
@@ -168,6 +223,12 @@ export function App() {
 
   // Handler para remover/limpar súmula (zera o placar e desvincula a súmula)
   const handleDeleteScoresheet = (matchId: string) => {
+    if (role === 'juiz') {
+      deleteScoresheetFromSupabase(matchId).catch(err => {
+        console.warn('Falha ao deletar súmula no Supabase:', err);
+      });
+    }
+
     setState(prev => {
       const { matches, knockoutMatches, scoresheets } = removeScoresheetAndResetMatch(
         matchId,
@@ -188,6 +249,85 @@ export function App() {
     });
   };
 
+  // Handler para sincronizar dados com a nuvem (Supabase)
+  const handleSync = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    try {
+      const remoteData = await pullTournamentFromSupabase();
+      const teamsFromRemote = remoteData?.teams || [];
+      const sheetsFromRemote = remoteData?.scoresheets || {};
+
+      setState(prev => {
+        const mergedTeams =
+          teamsFromRemote.length > 0
+            ? prev.teams.map(localTeam => {
+                const remoteTeam = teamsFromRemote.find(t => t.id === localTeam.id);
+                return remoteTeam
+                  ? { ...localTeam, name: remoteTeam.name, players: remoteTeam.players }
+                  : localTeam;
+              })
+            : prev.teams;
+
+        // Deixar somente as súmulas oficiais vindas do servidor
+        const updatedSheets = sheetsFromRemote;
+
+        // Resetar os placares que não possuem súmula no servidor (limpa simulações locais)
+        const { matches, knockoutMatches } = syncMatchScoresFromScoresheets(
+          prev.matches,
+          prev.knockoutMatches,
+          updatedSheets,
+          true
+        );
+
+        // Recalcular chaveamento de mata-mata de acordo com a fase de grupos oficial do servidor
+        const officialStandings = calculateStandings(mergedTeams, matches);
+        const groupStageDone = isGroupStageCompleted(matches);
+
+        let finalKnockoutMatches = knockoutMatches;
+        if (groupStageDone) {
+          finalKnockoutMatches = generateSemifinals(officialStandings, knockoutMatches);
+        } else {
+          finalKnockoutMatches = knockoutMatches.map(m => ({
+            ...m,
+            homeTeamId: null,
+            awayTeamId: null,
+            homeScore: null,
+            awayScore: null,
+            homePenalties: null,
+            awayPenalties: null,
+            winnerTeamId: null,
+            loserTeamId: null,
+            status: 'PENDING' as const
+          }));
+        }
+
+        const updatedState: TournamentState = {
+          ...prev,
+          teams: mergedTeams,
+          scoresheets: updatedSheets,
+          matches,
+          knockoutMatches: finalKnockoutMatches,
+          lastUpdated: new Date().toISOString()
+        };
+        saveTournamentState(updatedState);
+        return updatedState;
+      });
+
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(
+        now.getMinutes()
+      ).padStart(2, '0')}`;
+      setLastSyncTime(timeStr);
+      showToast('Dados sincronizados com sucesso!');
+    } catch (err) {
+      console.warn('Falha na sincronização com o Supabase:', err);
+      showToast('Não foi possível sincronizar no momento. Verifique a internet.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleRestoreState = (newState: TournamentState) => {
     setState(newState);
     saveTournamentState(newState);
@@ -200,13 +340,25 @@ export function App() {
 
   // Conteúdo interno do aplicativo
   const AppContent = (
-    <div className="flex flex-col min-h-full bg-[#0B1320] text-white font-sans selection:bg-[#00D26A] selection:text-[#0B1320]">
+    <div data-role={role} className="flex flex-col min-h-full bg-[#0B1320] text-white font-sans selection:bg-[#00D26A] selection:text-[#0B1320] relative">
       <Header
+        role={role}
+        isSyncing={isSyncing}
+        lastSyncTime={lastSyncTime}
+        isOnline={isOnline}
+        onSync={handleSync}
         finishedMatchesCount={finishedMatchesCount}
         totalMatchesCount={state.matches.length}
         onQuickSave={() => setActiveTab('export')}
         onResetPrompt={handleResetState}
       />
+
+      {toastMessage && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#121D2F] text-white px-4 py-2.5 rounded-2xl border border-[#00D26A]/40 shadow-xl shadow-black/50 text-xs font-bold flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+          <Sparkles className="w-4 h-4 text-[#00D26A]" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
 
       <IOSInstallBanner />
 
@@ -221,7 +373,11 @@ export function App() {
         )}
 
         {activeTab === 'teams' && (
-          <TeamsTab teams={state.teams} onUpdatePlayers={handleUpdatePlayers} />
+          <TeamsTab
+            teams={state.teams}
+            readOnly={role === 'torcida'}
+            onUpdatePlayers={handleUpdatePlayers}
+          />
         )}
 
         {activeTab === 'standings' && <StandingsTab standings={standings} />}
@@ -241,6 +397,7 @@ export function App() {
             matches={state.matches}
             knockoutMatches={state.knockoutMatches}
             scoresheets={state.scoresheets}
+            readOnly={role === 'torcida'}
             onSaveScoresheet={handleSaveScoresheet}
             onDeleteScoresheet={handleDeleteScoresheet}
           />
@@ -258,6 +415,11 @@ export function App() {
       <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
+
+  // Guarda de autenticação por PIN no PWA do Árbitro
+  if (role === 'juiz' && !isJudgeAuthed) {
+    return <JudgeAuthLock onAuthenticated={() => setIsJudgeAuthed(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#070D17] text-white flex flex-col justify-center items-center font-sans antialiased">

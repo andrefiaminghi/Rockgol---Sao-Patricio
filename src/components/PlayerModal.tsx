@@ -4,11 +4,12 @@ import { Team } from '../types/tournament';
 
 interface PlayerModalProps {
   team: Team;
+  readOnly?: boolean;
   onClose: () => void;
   onSave: (players: string[]) => void;
 }
 
-export const PlayerModal: React.FC<PlayerModalProps> = ({ team, onClose, onSave }) => {
+export const PlayerModal: React.FC<PlayerModalProps> = ({ team, readOnly = false, onClose, onSave }) => {
   const [playerList, setPlayerList] = useState<string[]>(() => {
     const list = [...team.players];
     while (list.length < 10) list.push('');
@@ -46,7 +47,9 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ team, onClose, onSave 
         {/* Content */}
         <div className="p-4 overflow-y-auto space-y-2 flex-1">
           <p className="text-xs text-[#8B9BB4] mb-3">
-            Cadastre os 10 atletas da equipe para controle oficial do torneio:
+            {readOnly
+              ? 'Relação oficial dos atletas cadastrados para o torneio:'
+              : 'Cadastre os 10 atletas da equipe para controle oficial do torneio:'}
           </p>
 
           {playerList.map((player, idx) => (
@@ -56,10 +59,15 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ team, onClose, onSave 
               </span>
               <input
                 type="text"
-                placeholder={`Nome do Atleta ${idx + 1}`}
+                disabled={readOnly}
+                placeholder={readOnly ? 'Atleta não cadastrado' : `Nome do Atleta ${idx + 1}`}
                 value={player}
                 onChange={e => handlePlayerChange(idx, e.target.value)}
-                className="flex-1 px-3 py-1.5 rounded-xl bg-[#0B1320] border border-[#1E2D44] focus:border-[#00D26A] text-xs font-semibold text-white placeholder-[#5D6E87] outline-none transition"
+                className={`flex-1 px-3 py-1.5 rounded-xl border text-xs font-semibold outline-none transition ${
+                  readOnly
+                    ? 'bg-[#0E1726] border-[#1E2D44] text-white/90 cursor-default'
+                    : 'bg-[#0B1320] border-[#1E2D44] focus:border-[#00D26A] text-white placeholder-[#5D6E87]'
+                }`}
               />
             </div>
           ))}
@@ -67,19 +75,30 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ team, onClose, onSave 
 
         {/* Footer */}
         <div className="p-4 border-t border-[#1E2D44] bg-[#16243A] flex gap-2">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 px-4 rounded-xl border border-[#22314A] bg-[#1A2538] font-bold text-xs text-white hover:bg-[#22314A] transition"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSave}
-            className="flex-1 py-2.5 px-4 rounded-xl bg-[#00D26A] hover:bg-[#00B85C] font-black text-xs text-[#0B1320] flex items-center justify-center gap-1.5 shadow-lg shadow-[#00D26A]/20 transition"
-          >
-            <Check className="w-4 h-4 stroke-[3]" />
-            Salvar Elenco
-          </button>
+          {readOnly ? (
+            <button
+              onClick={onClose}
+              className="w-full py-2.5 px-4 rounded-xl bg-[#1A2538] hover:bg-[#22314A] font-bold text-xs text-white border border-[#22314A] transition"
+            >
+              Fechar
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={onClose}
+                className="flex-1 py-2.5 px-4 rounded-xl border border-[#22314A] bg-[#1A2538] font-bold text-xs text-white hover:bg-[#22314A] transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSave}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-[#00D26A] hover:bg-[#00B85C] font-black text-xs text-[#0B1320] flex items-center justify-center gap-1.5 shadow-lg shadow-[#00D26A]/20 transition"
+              >
+                <Check className="w-4 h-4 stroke-[3]" />
+                Salvar Elenco
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
