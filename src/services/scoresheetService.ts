@@ -8,11 +8,20 @@ import { resolveKnockoutMatch, updateFinalsFromSemifinals } from './knockoutServ
 export function syncMatchScoresFromScoresheets(
   matches: Match[],
   knockoutMatches: KnockoutMatch[],
-  scoresheets: Record<string, MatchScoresheet>
+  scoresheets: Record<string, MatchScoresheet>,
+  resetUnscheduledMatches: boolean = false
 ): { matches: Match[]; knockoutMatches: KnockoutMatch[] } {
   const updatedMatches = matches.map(match => {
     const sheet = scoresheets[match.id];
     if (!sheet || !sheet.hasScoresheet) {
+      if (resetUnscheduledMatches) {
+        return {
+          ...match,
+          homeScore: null,
+          awayScore: null,
+          status: 'PENDING' as const
+        };
+      }
       return match;
     }
 
@@ -35,6 +44,18 @@ export function syncMatchScoresFromScoresheets(
   const updatedKnockout = knockoutMatches.map(match => {
     const sheet = scoresheets[match.id];
     if (!sheet || !sheet.hasScoresheet) {
+      if (resetUnscheduledMatches) {
+        return {
+          ...match,
+          homeScore: null,
+          awayScore: null,
+          homePenalties: null,
+          awayPenalties: null,
+          winnerTeamId: null,
+          loserTeamId: null,
+          status: 'PENDING' as const
+        };
+      }
       return match;
     }
 

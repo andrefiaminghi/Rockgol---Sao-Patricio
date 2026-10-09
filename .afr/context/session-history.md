@@ -1,9 +1,24 @@
 ---
-last_updated: "2026-10-09T16:06:00-03:00"
+last_updated: "2026-10-09T16:13:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
+
+## [2026-10-09] Reset de Placares Manuais na Sincronização (Preservando Somente Dados do Servidor)
+- **Objetivo da Sessão:** Atender à solicitação de que, ao sincronizar o aplicativo (Supabase), qualquer placar preenchido manualmente ou simulado localmente na aba Jogos seja resetado, mantendo estritamente os placares com súmula oficial registrada no servidor.
+- **Vínculo à Task:** FEAT-2026-10-005 (Integridade e Sincronismo Fidedigno de Dados)
+- **Atividades Realizadas:**
+  - **Serviço de Súmula (`scoresheetService.ts`):**
+    - Adicionado suporte ao parâmetro booleano `resetUnscheduledMatches = false` em `syncMatchScoresFromScoresheets`.
+    - Quando ativado, qualquer partida que não possua súmula oficial no servidor é resetada para `homeScore: null, awayScore: null, status: 'PENDING'`.
+    - No mata-mata, partidas sem súmula também têm placares, penalidades e vencedores zerados.
+  - **Fluxo de Sincronização (`App.tsx`):**
+    - Ao disparar `handleSync()`, a sincronização passa `resetUnscheduledMatches: true`.
+    - A classificação oficial é recalculada com base exclusivamente nas partidas sincronizadas.
+    - O chaveamento de mata-mata é atualizado: se a fase de grupos oficial do servidor ainda não estiver concluída, os confrontos de semifinal e final retornam para o estado pendente/a definir.
+  - **Testes Automatizados:** Adicionado teste unitário em [`tests/unit/scoresheetService.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetService.test.ts) comprovando que partidas simuladas sem súmula são zeradas e partidas oficiais são preservadas.
+  - **Verificação:** 92/92 testes aprovados no Vitest (`npm test`) e compilação de produção (`npm run build`) validada sem erros.
 
 ## [2026-10-09] Separação Bilateral de Gols e Cartões por Equipe nos Cards da Súmula
 - **Objetivo da Sessão:** Atender à solicitação de exibir os gols e cartões da súmula separados por equipe nos cards de partida da aba Súmula, dividindo a área inferior em duas colunas correspondentes às equipes do placar (lado esquerdo para o time mandante/esquerda e lado direito para o time visitante/direita).

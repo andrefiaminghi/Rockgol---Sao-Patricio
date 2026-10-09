@@ -269,19 +269,45 @@ export function App({ role = 'torcida' }: AppProps = {}) {
               })
             : prev.teams;
 
-        const updatedSheets = { ...prev.scoresheets, ...sheetsFromRemote };
+        // Deixar somente as súmulas oficiais vindas do servidor
+        const updatedSheets = sheetsFromRemote;
+
+        // Resetar os placares que não possuem súmula no servidor (limpa simulações locais)
         const { matches, knockoutMatches } = syncMatchScoresFromScoresheets(
           prev.matches,
           prev.knockoutMatches,
-          updatedSheets
+          updatedSheets,
+          true
         );
+
+        // Recalcular chaveamento de mata-mata de acordo com a fase de grupos oficial do servidor
+        const officialStandings = calculateStandings(mergedTeams, matches);
+        const groupStageDone = isGroupStageCompleted(matches);
+
+        let finalKnockoutMatches = knockoutMatches;
+        if (groupStageDone) {
+          finalKnockoutMatches = generateSemifinals(officialStandings, knockoutMatches);
+        } else {
+          finalKnockoutMatches = knockoutMatches.map(m => ({
+            ...m,
+            homeTeamId: null,
+            awayTeamId: null,
+            homeScore: null,
+            awayScore: null,
+            homePenalties: null,
+            awayPenalties: null,
+            winnerTeamId: null,
+            loserTeamId: null,
+            status: 'PENDING' as const
+          }));
+        }
 
         const updatedState: TournamentState = {
           ...prev,
           teams: mergedTeams,
           scoresheets: updatedSheets,
           matches,
-          knockoutMatches,
+          knockoutMatches: finalKnockoutMatches,
           lastUpdated: new Date().toISOString()
         };
         saveTournamentState(updatedState);
