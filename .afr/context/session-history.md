@@ -1,9 +1,22 @@
 ---
-last_updated: "2026-10-09T15:37:00-03:00"
+last_updated: "2026-10-09T16:06:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
+
+## [2026-10-09] Separação Bilateral de Gols e Cartões por Equipe nos Cards da Súmula
+- **Objetivo da Sessão:** Atender à solicitação de exibir os gols e cartões da súmula separados por equipe nos cards de partida da aba Súmula, dividindo a área inferior em duas colunas correspondentes às equipes do placar (lado esquerdo para o time mandante/esquerda e lado direito para o time visitante/direita).
+- **Vínculo à Task:** FEAT-2026-10-004 (UX e Layout Bilateral da Súmula)
+- **Atividades Realizadas:**
+  - **Componente `ScoresheetTab.tsx`:**
+    - Substituída a listagem única de eventos por um grid de 2 colunas com divisor sutil (`divide-x divide-[#2F343C]/60`).
+    - Lado Esquerdo: lista gols e cartões do mandante (`teamId === m.homeTeamId`), alinhados à esquerda.
+    - Lado Direito: lista gols e cartões do visitante (`teamId === m.awayTeamId`), alinhados à direita e espelhados.
+    - Observações mantidas centralizadas abaixo das duas colunas.
+    - Caso não haja gols/cartões, exibe indicação discreta de partida sem eventos.
+  - **Testes Automatizados:** Atualizado [`tests/unit/scoresheetTab.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetTab.test.ts) validando a estrutura e os dados de eventos.
+  - **Verificação:** 91/91 testes aprovados no Vitest (`npm test`) e compilação de produção (`npm run build`) validada sem erros.
 
 ## [2026-10-09] Execução TDD: Sincronismo Supabase e PWAs Independentes (Juiz e Torcida)
 - **Objetivo da Sessão:** Executar integralmente o plano `plan-2026-10-09-003` (Tasks 001 a 005) com metodologia estrita TDD, integrando a persistência na nuvem com o Supabase e separando a aplicação em dois PWAs no mesmo repositório: PWA Juiz (`juiz.html`) e PWA Torcida (`index.html`).
