@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react';
-import { FileText, Download, Upload, RotateCcw, CheckCircle2, AlertCircle, X, MessageCircle } from 'lucide-react';
+import { Download, Upload, RotateCcw, CheckCircle2, AlertCircle, MessageCircle } from 'lucide-react';
 import { TournamentState } from '../types/tournament';
 import { exportTournamentBackup, importTournamentBackup } from '../services/backupService';
-import { generateAndDownloadTournamentPdf, shareReportToWhatsApp } from '../services/pdfExportService';
+import { shareClassificationToWhatsApp } from '../services/pdfExportService';
 
 interface ExportTabProps {
   state: TournamentState;
@@ -13,7 +13,6 @@ interface ExportTabProps {
 export const ExportTab: React.FC<ExportTabProps> = ({ state, onRestoreState, onResetState }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [feedback, setFeedback] = useState<{ message: string; isError: boolean } | null>(null);
-  const [shareDialog, setShareDialog] = useState<{ isOpen: boolean; summary: string; filename: string } | null>(null);
 
   const handleDownloadBackup = () => {
     try {
@@ -52,34 +51,19 @@ export const ExportTab: React.FC<ExportTabProps> = ({ state, onRestoreState, onR
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleGeneratePdf = () => {
+  const handleShareWhatsApp = async () => {
     try {
-      // 1. Gera o PDF em memória e dispara o download direto no celular
-      const result = generateAndDownloadTournamentPdf(state);
-
       setFeedback({
-        message: `PDF salvo como "${result.filename}" na pasta de Downloads!`,
+        message: 'Abrindo WhatsApp para encaminhar a classificação...',
         isError: false
       });
-
-      // 2. Pergunta ao usuário se ele deseja compartilhar por WhatsApp
-      setShareDialog({
-        isOpen: true,
-        summary: result.shareSummary,
-        filename: result.filename
-      });
+      await shareClassificationToWhatsApp(state);
     } catch (err: any) {
       setFeedback({
-        message: `Erro ao gerar PDF: ${err.message}`,
+        message: `Erro ao compartilhar: ${err.message}`,
         isError: true
       });
     }
-  };
-
-  const handleConfirmWhatsAppShare = async () => {
-    if (!shareDialog) return;
-    await shareReportToWhatsApp(shareDialog.summary);
-    setShareDialog(null);
   };
 
   const handleReset = () => {
@@ -122,26 +106,26 @@ export const ExportTab: React.FC<ExportTabProps> = ({ state, onRestoreState, onR
         </div>
       )}
 
-      {/* Card 1: Relatório em PDF Direto no Aparelho */}
+      {/* Card 1: Compartilhar Classificação via WhatsApp */}
       <div className="bg-[#121D2F] border border-[#1E2D44] rounded-2xl p-4 shadow-xl space-y-3">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-[#00D26A]/15 border border-[#00D26A]/30 flex items-center justify-center text-[#00D26A]">
-            <FileText className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-xl bg-[#25D366]/15 border border-[#25D366]/30 flex items-center justify-center text-[#25D366]">
+            <MessageCircle className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-white font-['Outfit',sans-serif]">Exportar Relatório em PDF</h2>
+            <h2 className="text-sm font-bold text-white font-['Outfit',sans-serif]">Compartilhar Classificação</h2>
             <p className="text-xs text-[#8B9BB4]">
-              Baixa o arquivo PDF diretamente no seu celular e permite compartilhar no WhatsApp.
+              Encaminha a tabela atualizada e o chaveamento diretamente para amigos ou grupos no WhatsApp.
             </p>
           </div>
         </div>
 
         <button
-          onClick={handleGeneratePdf}
-          className="w-full py-3 px-4 rounded-xl bg-[#00D26A] hover:bg-[#00B85C] active:scale-[0.99] font-black text-xs text-[#0B1320] flex items-center justify-center gap-2 shadow-lg shadow-[#00D26A]/20 transition"
+          onClick={handleShareWhatsApp}
+          className="w-full py-3.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] active:scale-[0.99] font-black text-xs text-[#0B1320] flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/25 transition"
         >
-          <Download className="w-4 h-4 stroke-[2.5]" />
-          Baixar PDF no Celular & Compartilhar
+          <MessageCircle className="w-4 h-4 fill-current stroke-[2.5]" />
+          Compartilhar via WhatsApp
         </button>
       </div>
 
@@ -202,52 +186,6 @@ export const ExportTab: React.FC<ExportTabProps> = ({ state, onRestoreState, onR
           Resetar Torneio
         </button>
       </div>
-
-      {/* Modal / Diálogo: Perguntar se deseja Compartilhar no WhatsApp */}
-      {shareDialog && shareDialog.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#121D2F] border border-[#1E2D44] rounded-2xl w-full max-w-sm flex flex-col shadow-2xl overflow-hidden p-5 space-y-4">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#00D26A]/15 border border-[#00D26A]/30 flex items-center justify-center text-[#00D26A]">
-                  <CheckCircle2 className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white font-['Outfit',sans-serif]">PDF Baixado com Sucesso!</h3>
-                  <p className="text-[11px] text-[#8B9BB4]">{shareDialog.filename}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShareDialog(null)}
-                className="w-7 h-7 rounded-lg bg-[#1A2538] text-[#8B9BB4] hover:text-white flex items-center justify-center border border-[#22314A]"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <p className="text-xs text-white/90 leading-relaxed bg-[#0E1726] p-3 rounded-xl border border-[#1E2D44]">
-              O documento PDF foi salvo na memória do seu aparelho. Deseja compartilhar os resultados e a tabela com os grupos pelo <strong>WhatsApp</strong>?
-            </p>
-
-            <div className="flex flex-col gap-2 pt-1">
-              <button
-                onClick={handleConfirmWhatsAppShare}
-                className="w-full py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] active:scale-[0.99] font-black text-xs text-[#0B1320] flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20 transition"
-              >
-                <MessageCircle className="w-4 h-4 stroke-[2.5]" />
-                Sim, Compartilhar no WhatsApp
-              </button>
-
-              <button
-                onClick={() => setShareDialog(null)}
-                className="w-full py-2.5 px-4 rounded-xl bg-[#1A2538] hover:bg-[#22314A] font-bold text-xs text-[#8B9BB4] hover:text-white border border-[#22314A] transition"
-              >
-                Concluir (Apenas Manter no Celular)
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

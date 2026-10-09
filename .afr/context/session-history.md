@@ -17,12 +17,15 @@ project: "Rockgol - São Patrício"
   - Criação de modal nativo embutido no app após a geração do PDF, perguntando se o usuário deseja compartilhar a tabela e resultados com os grupos pelo WhatsApp.
   - Validação de compilação TypeScript e Vite (`npm run build`) com 0 erros.
   - Execução e aprovação de 100% dos testes unitários (32 testes em 8 suites passando).
+  - Geração completa de ícones nativos do Android (`mipmap-mdpi`, `hdpi`, `xhdpi`, `xxhdpi`, `xxxhdpi`) com ícone adaptativo e fundo `#0B1320` a partir de `logotipoapp.jpg`.
+  - Atualização dos ícones do PWA e favicons em `public/icon-192.png` e `public/icon-512.png`.
+  - Simplificação do fluxo de exportação a pedido do usuário: alteração do bloco para "Compartilhar Classificação", botão "Compartilhar via WhatsApp" que vai direto para a tela de seleção de contatos/grupos do WhatsApp sem modais intermediários.
   - Sincronização dos novos web assets e plugins na pasta nativa `android/`.
 - **Decisões Tomadas:**
-  - Eliminar completamente qualquer chamada a `window.open` ou `print()`.
-  - Download ocorre silenciosamente para a pasta de Downloads do dispositivo enquanto o usuário permanece na mesma tela do app com feedback visual claro e modal de compartilhamento opcional.
+  - Fluxo direto para o WhatsApp elimina a fricção de tentar localizar arquivos PDF salvos na árvore de diretórios do celular, entregando a informação imediatamente aos destinatários nos grupos.
+  - Substituir todos os ícones padrões do Capacitor pelos ícones oficiais do RockGol São Patrício em todas as densidades do Android.
 - **Próximos Passos:**
-  - Realizar commit e push das alterações para que a esteira do GitHub Actions gere o novo APK atualizado.
+  - Realizar commit e push das alterações para que a esteira do GitHub Actions gere o novo APK atualizado com os novos ícones e a exportação corrigida.
 
 ## [2026-10-08] Configuração do Capacitor Android e Pipeline CI/CD de Build do APK
 - **Objetivo da Sessão:** Configurar a estrutura nativa Android (Capacitor) e a esteira de CI/CD via GitHub Actions para compilação automatizada do APK Android (`app-debug.apk`) na nuvem sem sobrecarregar a máquina local.

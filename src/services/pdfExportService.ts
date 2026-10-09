@@ -295,7 +295,7 @@ export function generateAndDownloadTournamentPdf(state: TournamentState): Genera
   doc.save(filename);
 
   // Monta resumo textual pronto para envio no WhatsApp
-  const shareSummary = generateWhatsAppSummary(standings, sf1, sf2, thirdPlace, finalMatch, teamMap);
+  const shareSummary = generateTournamentWhatsAppSummary(state);
 
   return {
     blob: doc.output('blob'),
@@ -307,14 +307,16 @@ export function generateAndDownloadTournamentPdf(state: TournamentState): Genera
 /**
  * Cria o resumo textual oficial com caracteres formatados para WhatsApp
  */
-function generateWhatsAppSummary(
-  standings: any[],
-  sf1: any,
-  sf2: any,
-  thirdPlace: any,
-  finalMatch: any,
-  teamMap: Map<string, string>
-): string {
+export function generateTournamentWhatsAppSummary(state: TournamentState): string {
+  const standings = calculateStandings(state.teams, state.matches);
+  const teamMap = new Map<string, string>();
+  state.teams.forEach(t => teamMap.set(t.id, t.name));
+
+  const sf1 = state.knockoutMatches.find(m => m.id === 'sf1');
+  const sf2 = state.knockoutMatches.find(m => m.id === 'sf2');
+  const thirdPlace = state.knockoutMatches.find(m => m.id === 'third_place');
+  const finalMatch = state.knockoutMatches.find(m => m.id === 'final');
+
   let text = `🏆 *ROCKGOL 2026 — SÃO PATRÍCIO BAR*\n`;
   text += `📊 *Classificação Oficial (1ª Fase):*\n\n`;
 
@@ -322,30 +324,44 @@ function generateWhatsAppSummary(
     const isG4 = i < 4;
     const badge = isG4 ? '🟢' : '⚪';
     const sg = t.goalDifference > 0 ? `+${t.goalDifference}` : t.goalDifference;
-    text += `${badge} ${i + 1}º *${t.teamName}* — ${t.points} pts (${t.won}V, SG: ${sg})\n`;
+    text += `${badge} ${i + 1}º *${t.teamName}* — ${t.points} pts (${t.won}V | SG: ${sg})\n`;
   });
 
-  text += `\n⚔️ *Mata-Mata:*\n`;
-  const formatMatch = (title: string, m: any) => {
-    if (!m) return '';
-    const h = m.homeTeamId ? teamMap.get(m.homeTeamId) || m.homeTeamId : 'A definir';
-    const a = m.awayTeamId ? teamMap.get(m.awayTeamId) || m.awayTeamId : 'A definir';
-    const score = m.status === 'FINISHED' ? `${m.homeScore} × ${m.awayScore}` : 'A disputar';
-    return `• ${title}: ${h} ${score} ${a}\n`;
-  };
+  const hasKnockoutStarted = state.knockoutMatches.some(m => m.status === 'FINISHED' || m.homeTeamId);
+  if (hasKnockoutStarted) {
+    text += `\n⚔️ *Mata-Mata:*\n`;
+    const formatMatch = (title: string, m: any) => {
+      if (!m) return '';
+      const h = m.homeTeamId ? teamMap.get(m.homeTeamId) || m.homeTeamId : 'A definir';
+      const a = m.awayTeamId ? teamMap.get(m.awayTeamId) || m.awayTeamId : 'A definir';
+      const score = m.status === 'FINISHED' ? `${m.homeScore} × ${m.awayScore}` : 'A disputar';
+      return `• ${title}: ${h} ${score} ${a}\n`;
+    };
 
-  text += formatMatch('SF1', sf1);
-  text += formatMatch('SF2', sf2);
-  text += formatMatch('3º Lugar', thirdPlace);
-  text += formatMatch('Final', finalMatch);
+    text += formatMatch('SF1', sf1);
+    text += formatMatch('SF2', sf2);
+    text += formatMatch('3º Lugar', thirdPlace);
+    text += formatMatch('Grande Final', finalMatch);
+  }
 
-  text += `\n📄 _O relatório completo em PDF foi gerado pelo app oficial._`;
+  const now = new Date();
+  const dateStr = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  text += `\n🕒 _Atualizado em ${dateStr}_\n`;
+  text += `📱 _RockGol 2026 — App Oficial_`;
 
   return text;
 }
 
 /**
- * Dispara o compartilhamento via WhatsApp ou folha nativa do aparelho
+ * Dispara o compartilhamento da classificação diretamente no WhatsApp
+ */
+export async function shareClassificationToWhatsApp(state: TournamentState): Promise<void> {
+  const summary = generateTournamentWhatsAppSummary(state);
+  await shareReportToWhatsApp(summary);
+}
+
+/**
+ * Dispara o compartilhamento de texto via WhatsApp ou folha nativa do aparelho
  */
 export async function shareReportToWhatsApp(text: string): Promise<void> {
   try {
@@ -353,9 +369,9 @@ export async function shareReportToWhatsApp(text: string): Promise<void> {
     const canShare = await Share.canShare();
     if (canShare.value) {
       await Share.share({
-        title: 'RockGol 2026 - Relatório Oficial',
+        title: 'RockGol 2026 - Classificação',
         text: text,
-        dialogTitle: 'Compartilhar no WhatsApp'
+        dialogTitle: 'Compartilhar Classificação'
       });
       return;
     }
