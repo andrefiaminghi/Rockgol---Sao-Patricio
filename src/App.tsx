@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Smartphone, Monitor, Wifi, Battery, Sparkles } from 'lucide-react';
-import { TournamentState, KnockoutMatch } from './types/tournament';
+import { TournamentState, KnockoutMatch, MatchScoresheet } from './types/tournament';
 import {
   loadTournamentState,
   saveTournamentState,
@@ -12,6 +12,7 @@ import {
   resolveKnockoutMatch,
   updateFinalsFromSemifinals
 } from './services/knockoutService';
+import { syncMatchScoresFromScoresheets } from './services/scoresheetService';
 import { Header } from './components/Header';
 import { Navigation, TabType } from './components/Navigation';
 import { MatchesTab } from './components/MatchesTab';
@@ -134,6 +135,53 @@ export function App() {
         knockoutMatches: updatedMatches,
         lastUpdated: new Date().toISOString()
       };
+    });
+  };
+
+  // Handler para salvar/atualizar súmula oficial
+  const handleSaveScoresheet = (sheet: MatchScoresheet) => {
+    setState(prev => {
+      const updatedSheets = { ...prev.scoresheets, [sheet.matchId]: sheet };
+      const { matches, knockoutMatches } = syncMatchScoresFromScoresheets(
+        prev.matches,
+        prev.knockoutMatches,
+        updatedSheets
+      );
+
+      let finalKnockout = knockoutMatches;
+      const targetKnockout = finalKnockout.find(m => m.id === sheet.matchId);
+      if (
+        targetKnockout &&
+        (targetKnockout.id === 'sf1' || targetKnockout.id === 'sf2') &&
+        targetKnockout.status === 'FINISHED'
+      ) {
+        finalKnockout = updateFinalsFromSemifinals(finalKnockout);
+      }
+
+      const updatedState: TournamentState = {
+        ...prev,
+        matches,
+        knockoutMatches: finalKnockout,
+        scoresheets: updatedSheets,
+        lastUpdated: new Date().toISOString()
+      };
+      saveTournamentState(updatedState);
+      return updatedState;
+    });
+  };
+
+  // Handler para remover súmula (reverte ao modo de placar manual)
+  const handleDeleteScoresheet = (matchId: string) => {
+    setState(prev => {
+      const updatedSheets = { ...prev.scoresheets };
+      delete updatedSheets[matchId];
+      const updatedState: TournamentState = {
+        ...prev,
+        scoresheets: updatedSheets,
+        lastUpdated: new Date().toISOString()
+      };
+      saveTournamentState(updatedState);
+      return updatedState;
     });
   };
 
