@@ -170,7 +170,7 @@ describe('Configurações de PWA, iOS e Resiliência Offline', () => {
     expect(content).toContain('href="./manifest.json"');
   });
 
-  it('deve ter Service Worker com precache relativo e estratégia de cache offline dinâmico', () => {
+  it('deve ter Service Worker com precache relativo, cache v5 e ignorar chamadas do Supabase', () => {
     const swPath = path.join(rootDir, 'public/sw.js');
     const content = fs.readFileSync(swPath, 'utf-8');
 
@@ -179,6 +179,8 @@ describe('Configurações de PWA, iOS e Resiliência Offline', () => {
     expect(content).toContain("'./index.html'");
     expect(content).toContain('caches.open');
     expect(content).toContain('event.request.mode === \'navigate\'');
+    expect(content).toContain('rockgol-cache-v5');
+    expect(content).toContain("event.request.url.includes('supabase.co')");
   });
 
   it('deve acionar navigator.share no saveTournamentBackupFile quando suportado no ambiente móvel', async () => {

@@ -21,8 +21,8 @@ interface ScoresheetTabProps {
   knockoutMatches: KnockoutMatch[];
   scoresheets: Record<string, MatchScoresheet>;
   readOnly?: boolean;
-  onSaveScoresheet: (sheet: MatchScoresheet) => void;
-  onDeleteScoresheet: (matchId: string) => void;
+  onSaveScoresheet: (sheet: MatchScoresheet) => void | Promise<void>;
+  onDeleteScoresheet: (matchId: string) => void | Promise<void>;
 }
 
 type SubTabType = 'partidas' | 'artilharia' | 'suspensoes';
@@ -443,7 +443,7 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
                           <button
                             type="button"
                             disabled={isDeleteBlocked}
-                            onClick={() => {
+                            onClick={async () => {
                               if (isDeleteBlocked) {
                                 alert(deleteCheck.reason || 'Limpeza bloqueada.');
                                 return;
@@ -453,7 +453,7 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
                                   'Deseja realmente limpar a súmula desta partida? O registro será excluído do banco de dados e os placares serão zerados.'
                                 )
                               ) {
-                                onDeleteScoresheet(m.id);
+                                await onDeleteScoresheet(m.id);
                               }
                             }}
                             className={`text-xs font-bold px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 border ${

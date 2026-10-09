@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rockgol-cache-v4';
+const CACHE_NAME = 'rockgol-cache-v5';
 const PRECACHE_ASSETS = [
   './',
   './index.html',
@@ -39,6 +39,12 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   if (!event.request.url.startsWith('http')) return;
+
+  // IMPORTANTE: NUNCA interceptar ou cachear requisições da API Supabase!
+  // O banco de dados em tempo real deve trafegar sempre direto pela rede do navegador.
+  if (event.request.url.includes('supabase.co')) {
+    return;
+  }
 
   // Para navegação e documentos HTML: estratégia Network-First
   // Garante que o usuário receba imediatamente as atualizações quando online,

@@ -280,6 +280,10 @@ export function App({ role = 'torcida' }: AppProps = {}) {
     setIsSyncing(true);
     try {
       const remoteData = await pullTournamentFromSupabase();
+      if (!remoteData.success) {
+        showToast(remoteData.error || 'Não foi possível conectar ao servidor. Tente novamente.');
+        return;
+      }
       const teamsFromRemote = remoteData?.teams || [];
       const sheetsFromRemote = remoteData?.scoresheets || {};
 

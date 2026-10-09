@@ -21,6 +21,28 @@ maintainers: ["André Ribeiro"]
 | DIV-05 | CI/CD / Android | Capacitor 7 exige JDK 21 para compilação (error: invalid source release: 21) | resolvido |
 | DIV-06 | Mobile / PDF | Exportação de PDF com window.open direciona para o Chrome e trava retorno | resolvido |
 | DIV-07 | Mobile / Backup | Download de blob em WebView Android não salva arquivo físico no aparelho | resolvido |
+| DIV-08 | Supabase / PWA Cache | Súmula excluída restaurada e nova súmula sobreposta ao sincronizar no PWA móvel | resolvido |
+
+---
+
+## DIV-08 — Súmula excluída restaurada e nova súmula sobreposta ao sincronizar no PWA móvel
+
+**Sintoma:** Ao limpar uma súmula no navegador do celular, a interface limpava localmente, mas ao tocar em "Sincronizar", os dados da súmula anterior retornavam. Se uma nova súmula fosse cadastrada e sincronizada, os dados antigos também a sobrepunham.
+
+**Causa raiz:** 
+1. O Service Worker (`public/sw.js`) aplicava estratégia Cache-First a todas as requisições GET HTTP, armazenando em cache a resposta da API REST do Supabase (`https://*.supabase.co/rest/v1/scoresheets?select=*`) na primeira sincronização. Nas sincronizações seguintes, o Service Worker devolvia o snapshot defasado do Cache Storage sem consultar o servidor.
+2. O modal de súmula fechava imediatamente sem aguardar a conclusão assíncrona do push/delete no Supabase, permitindo que o usuário disparasse sincronismo com requisições HTTP ainda em trânsito no dispositivo móvel.
+3. Ausência de headers `Cache-Control: no-cache, no-store` no cliente `@supabase/supabase-js`.
+
+**Fix:**
+1. No `public/sw.js`, inclusão de bypass explícito para chamadas da API do Supabase (`event.request.url.includes('supabase.co')`), garantindo que o banco de dados em tempo real nunca seja interceptado ou congelado pelo Service Worker.
+2. Atualização da versão do cache no Service Worker para `rockgol-cache-v5`, forçando o expurgo de versões anteriores no ciclo de vida de ativação.
+3. Adição de headers `Cache-Control: no-cache, no-store, must-revalidate` na inicialização do SupabaseClient.
+4. Adição de estado `isSubmitting` com indicador `Loader2` nos botões de "Salvar Súmula" e "Limpar Súmula" em `ScoresheetModal.tsx`, aguardando a confirmação do Supabase antes de fechar o modal.
+5. Verificação mandatória de `remoteData.success` no `handleSync` de `src/App.tsx`.
+
+**Data:** 2026-10-09
+**Onde aplica:** `public/sw.js`, `src/services/supabaseService.ts`, `src/components/ScoresheetModal.tsx`, `src/App.tsx`.
 
 ---
 

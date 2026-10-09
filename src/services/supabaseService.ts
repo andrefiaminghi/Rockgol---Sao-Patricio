@@ -16,6 +16,12 @@ export function getSupabaseClient(): SupabaseClient {
       auth: {
         persistSession: false,
         autoRefreshToken: false
+      },
+      global: {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          Pragma: 'no-cache'
+        }
       }
     });
   }

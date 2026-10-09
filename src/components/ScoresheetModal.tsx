@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Trash2, Check } from 'lucide-react';
+import { X, Plus, Trash2, Check, Loader2 } from 'lucide-react';
 import { Match, KnockoutMatch, Team, MatchScoresheet, GoalEvent, CardEvent, PlayerSuspension } from '../types/tournament';
 import { isPlayerSuspended } from '../services/scoresheetService';
 
@@ -12,8 +12,8 @@ interface ScoresheetModalProps {
   roundNumber: number;
   canDelete?: boolean;
   deleteDisabledReason?: string;
-  onSave: (sheet: MatchScoresheet) => void;
-  onDelete?: (matchId: string) => void;
+  onSave: (sheet: MatchScoresheet) => void | Promise<void>;
+  onDelete?: (matchId: string) => void | Promise<void>;
   onClose: () => void;
 }
 
@@ -46,6 +46,8 @@ export const ScoresheetModal: React.FC<ScoresheetModalProps> = ({
       : ''
   );
   const [penaltyError, setPenaltyError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [submitActionText, setSubmitActionText] = useState<string>('');
 
   // Modais internos de seleção
   const [selectedGoalTeamId, setSelectedGoalTeamId] = useState<string | null>(null);
@@ -103,7 +105,7 @@ export const ScoresheetModal: React.FC<ScoresheetModalProps> = ({
     setCards(cards.filter(c => c.id !== id));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (isKnockout && homeGoalsCount === awayGoalsCount) {
       if (homePenalties === '' || awayPenalties === '') {
         setPenaltyError('Partida eliminatória empatada necessita do placar de pênaltis.');
@@ -121,25 +123,45 @@ export const ScoresheetModal: React.FC<ScoresheetModalProps> = ({
       }
     }
 
-    onSave({
-      matchId: match.id,
-      hasScoresheet: true,
-      goals,
-      cards,
-      observations,
-      homePenalties: isKnockout && homeGoalsCount === awayGoalsCount ? Number(homePenalties) : null,
-      awayPenalties: isKnockout && homeGoalsCount === awayGoalsCount ? Number(awayPenalties) : null,
-      updatedAt: new Date().toISOString()
-    });
-    onClose();
+    try {
+      setIsSubmitting(true);
+      setSubmitActionText('Salvando no banco...');
+      await onSave({
+        matchId: match.id,
+        hasScoresheet: true,
+        goals,
+        cards,
+        observations,
+        homePenalties: isKnockout && homeGoalsCount === awayGoalsCount ? Number(homePenalties) : null,
+        awayPenalties: isKnockout && homeGoalsCount === awayGoalsCount ? Number(awayPenalties) : null,
+        updatedAt: new Date().toISOString()
+      });
+      onClose();
+    } catch (err) {
+      console.error('Erro ao salvar súmula:', err);
+    } finally {
+      setIsSubmitting(false);
+      setSubmitActionText('');
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (confirm('Deseja realmente limpar esta súmula? Os gols, cartões e placares desta partida na aba Súmula e na aba Jogos serão zerados.')) {
       if (onDelete) {
-        onDelete(match.id);
+        try {
+          setIsSubmitting(true);
+          setSubmitActionText('Excluindo do banco...');
+          await onDelete(match.id);
+          onClose();
+        } catch (err) {
+          console.error('Erro ao excluir súmula:', err);
+        } finally {
+          setIsSubmitting(false);
+          setSubmitActionText('');
+        }
+      } else {
+        onClose();
       }
-      onClose();
     }
   };
 
@@ -483,7 +505,7 @@ export const ScoresheetModal: React.FC<ScoresheetModalProps> = ({
           {currentScoresheet?.hasScoresheet ? (
             <button
               type="button"
-              disabled={!canDelete}
+              disabled={!canDelete || isSubmitting}
               onClick={() => {
                 if (!canDelete) {
                   alert(deleteDisabledReason || 'Limpeza bloqueada.');
@@ -492,14 +514,23 @@ export const ScoresheetModal: React.FC<ScoresheetModalProps> = ({
                 handleDelete();
               }}
               className={`text-xs font-bold px-3 py-2 rounded-xl border transition-colors flex items-center gap-1.5 ${
-                !canDelete
+                !canDelete || isSubmitting
                   ? 'opacity-40 text-gray-400 border-gray-600 bg-gray-800/30 cursor-not-allowed'
                   : 'text-red-400 hover:text-red-300 hover:bg-red-500/10 border-red-500/20'
               }`}
               title={!canDelete ? deleteDisabledReason : 'Limpar Súmula e Excluir do Banco'}
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>{!canDelete ? 'Bloqueado' : 'Limpar Súmula'}</span>
+              {isSubmitting && submitActionText.includes('Excluindo') ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Excluindo...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>{!canDelete ? 'Bloqueado' : 'Limpar Súmula'}</span>
+                </>
+              )}
             </button>
           ) : (
             <div />
@@ -508,17 +539,37 @@ export const ScoresheetModal: React.FC<ScoresheetModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
+              disabled={isSubmitting}
               onClick={onClose}
-              className="text-xs font-semibold text-[#8F99A8] hover:text-white px-3 py-2 rounded-xl transition-colors"
+              className={`text-xs font-semibold px-3 py-2 rounded-xl transition-colors ${
+                isSubmitting
+                  ? 'opacity-40 text-gray-500 cursor-not-allowed'
+                  : 'text-[#8F99A8] hover:text-white'
+              }`}
             >
               Cancelar
             </button>
             <button
               type="button"
+              disabled={isSubmitting}
               onClick={handleSave}
-              className="bg-[#00D26A] hover:bg-[#00B85C] text-[#0B1320] text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-[#00D26A]/20 transition-all flex items-center gap-1.5"
+              className={`text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-1.5 ${
+                isSubmitting
+                  ? 'opacity-60 bg-[#00D26A]/50 text-[#0B1320] cursor-wait'
+                  : 'bg-[#00D26A] hover:bg-[#00B85C] text-[#0B1320] shadow-[#00D26A]/20'
+              }`}
             >
-              <Check className="w-4 h-4 stroke-[3]" /> Salvar Súmula
+              {isSubmitting && submitActionText.includes('Salvando') ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin stroke-[3]" />
+                  <span>{submitActionText}</span>
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4 stroke-[3]" />
+                  <span>Salvar Súmula</span>
+                </>
+              )}
             </button>
           </div>
         </div>

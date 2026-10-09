@@ -1,9 +1,35 @@
 ---
-last_updated: "2026-10-09T17:15:00-03:00"
+last_updated: "2026-10-09T19:20:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
+
+## [2026-10-09] Diagnóstico e Resolução de Cache do Service Worker (PWA) e Sincronismo Supabase
+- **Objetivo da Sessão:** Investigar e solucionar o problema reportado onde:
+  1. Ao excluir uma súmula no celular, ao tocar em "Sincronizar", o sistema recarregava novamente os dados da súmula limpa/removida.
+  2. Ao registrar uma nova súmula e sincronizar, a nova súmula era sobreposta pelos dados antigos.
+- **Vínculo à Task / Bugfix:** DIV-08 (Supabase / PWA Cache & Sync Integrity)
+- **Diagnóstico da Causa Raiz:**
+  - O Service Worker (`public/sw.js`) aplicava a estratégia Cache-First a todas as requisições GET HTTP indiscriminadamente. As chamadas REST da API do Supabase (`https://*.supabase.co/rest/v1/scoresheets?select=*`) foram interceptadas e guardadas em cache no primeiro pull. Nas sincronizações subsequentes, o Service Worker devolvia sempre o snapshot congelado do Cache Storage, ignorando alterações remotas no banco.
+  - O modal de súmula fechava imediatamente sem esperar o `push` ou `delete` no Supabase concluir na rede móvel, gerando concorrência com o botão "Sincronizar".
+  - Ausência de headers `Cache-Control: no-cache, no-store` no cliente Supabase contra cache HTTP nativo do Safari/Chrome.
+- **Atividades Realizadas:**
+  - **Service Worker (`public/sw.js`):**
+    - Adicionada regra explícita de bypass para a API do Supabase (`event.request.url.includes('supabase.co')`), garantindo que o banco de dados trafegue sempre direto pela rede do navegador.
+    - Versão do cache elevada para `rockgol-cache-v5` para expurgar automaticamente os caches antigos.
+  - **Cliente Supabase (`src/services/supabaseService.ts`):**
+    - Configurados headers `Cache-Control: no-cache, no-store, must-revalidate` e `Pragma: no-cache` na instância do `@supabase/supabase-js`.
+  - **Modal de Súmula (`src/components/ScoresheetModal.tsx`):**
+    - Adicionado estado `isSubmitting` com `Loader2` animado ("Salvando no banco...", "Excluindo do banco..."), mantendo os botões desabilitados até a confirmação de rede antes de fechar o modal.
+  - **Aplicação Principal (`src/App.tsx` e `src/components/ScoresheetTab.tsx`):**
+    - Validação de segurança em `handleSync`: se `remoteData.success` for falso, aborta imediatamente com toast de erro de conexão em vez de resetar placares locais com objeto vazio.
+    - Callbacks assíncronos integrados e propagados para a interface da aba Súmula.
+  - **Testes Automatizados:**
+    - Atualizado [`tests/unit/pwaSetup.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/pwaSetup.test.ts) validando a versão `rockgol-cache-v5` e o bypass de `supabase.co`.
+    - 100/100 testes passando (`npm test`) e build de produção (`npm run build`) validado.
+  - **Registro de Known Fixes:**
+    - Registrado item `DIV-08` em [`.afr/context/known-fixes.md`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/.afr/context/known-fixes.md).
 
 ## [2026-10-09] Exclusão de Súmula no Supabase e Trava de Limpeza da Fase de Grupos vs Mata-Mata
 - **Objetivo da Sessão:** Atender à solicitação de:
