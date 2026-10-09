@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import { Share } from '@capacitor/share';
-import { TournamentState } from '../types/tournament';
+import { TournamentState, KnockoutMatch } from '../types/tournament';
 import { calculateStandings } from './standingsService';
 
 export interface GeneratePdfResult {
@@ -305,6 +305,41 @@ export function generateAndDownloadTournamentPdf(state: TournamentState): Genera
 }
 
 /**
+ * Formata detalhes de uma partida do mata-mata para o WhatsApp com suporte a empates e pênaltis
+ */
+function formatKnockoutMatchForWhatsApp(
+  m: KnockoutMatch | undefined,
+  teamMap: Map<string, string>,
+  isTitleDecision: boolean = false
+): { headline: string; penaltiesLine?: string } {
+  if (!m) return { headline: 'A definir' };
+
+  const homeName = m.homeTeamId ? teamMap.get(m.homeTeamId) || m.homeTeamId : 'A definir';
+  const awayName = m.awayTeamId ? teamMap.get(m.awayTeamId) || m.awayTeamId : 'A definir';
+
+  if (m.status !== 'FINISHED' || m.homeScore === null || m.awayScore === null) {
+    if (m.homeTeamId && m.awayTeamId) {
+      return { headline: `${homeName} × ${awayName} _(A disputar)_` };
+    }
+    return { headline: `${homeName} × ${awayName} _(A definir)_` };
+  }
+
+  const isDraw = m.homeScore === m.awayScore;
+  const winnerName = m.winnerTeamId ? teamMap.get(m.winnerTeamId) || m.winnerTeamId : '';
+  const scoreBase = `${homeName} ${m.homeScore} × ${m.awayScore} ${awayName}`;
+
+  if (isDraw && m.homePenalties !== null && m.awayPenalties !== null) {
+    const verb = isTitleDecision ? 'CAMPEÃO' : 'venceu';
+    return {
+      headline: scoreBase,
+      penaltiesLine: `🎯 *Pênaltis:* ${homeName} ${m.homePenalties} × ${m.awayPenalties} ${awayName} ➔ *${winnerName} ${verb} nos pênaltis!*`
+    };
+  }
+
+  return { headline: scoreBase };
+}
+
+/**
  * Cria o resumo textual oficial com caracteres formatados para WhatsApp
  */
 export function generateTournamentWhatsAppSummary(state: TournamentState): string {
@@ -329,19 +364,48 @@ export function generateTournamentWhatsAppSummary(state: TournamentState): strin
 
   const hasKnockoutStarted = state.knockoutMatches.some(m => m.status === 'FINISHED' || m.homeTeamId);
   if (hasKnockoutStarted) {
-    text += `\n⚔️ *Mata-Mata:*\n`;
-    const formatMatch = (title: string, m: any) => {
-      if (!m) return '';
-      const h = m.homeTeamId ? teamMap.get(m.homeTeamId) || m.homeTeamId : 'A definir';
-      const a = m.awayTeamId ? teamMap.get(m.awayTeamId) || m.awayTeamId : 'A definir';
-      const score = m.status === 'FINISHED' ? `${m.homeScore} × ${m.awayScore}` : 'A disputar';
-      return `• ${title}: ${h} ${score} ${a}\n`;
-    };
+    text += `\n━━━━━━━━━━━━━━━━━━━━\n`;
+    text += `⚔️ *FASE FINAL (MATA-MATA)*\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-    text += formatMatch('SF1', sf1);
-    text += formatMatch('SF2', sf2);
-    text += formatMatch('3º Lugar', thirdPlace);
-    text += formatMatch('Grande Final', finalMatch);
+    // 1. Semifinais
+    text += `🥊 *SEMIFINAIS:*\n`;
+    const fSf1 = formatKnockoutMatchForWhatsApp(sf1, teamMap, false);
+    text += `• SF1 (1º × 4º): ${fSf1.headline}\n`;
+    if (fSf1.penaltiesLine) text += `  ${fSf1.penaltiesLine}\n`;
+
+    const fSf2 = formatKnockoutMatchForWhatsApp(sf2, teamMap, false);
+    text += `• SF2 (2º × 3º): ${fSf2.headline}\n`;
+    if (fSf2.penaltiesLine) text += `  ${fSf2.penaltiesLine}\n`;
+    text += `\n`;
+
+    // 2. Disputa do 3º Lugar com grande destaque
+    text += `🥉 *DISPUTA DO 3º LUGAR:*\n`;
+    const fThird = formatKnockoutMatchForWhatsApp(thirdPlace, teamMap, false);
+    text += `• Placar: ${fThird.headline}\n`;
+    if (fThird.penaltiesLine) text += `  ${fThird.penaltiesLine}\n`;
+
+    if (thirdPlace && thirdPlace.status === 'FINISHED' && thirdPlace.winnerTeamId && thirdPlace.loserTeamId) {
+      const thirdTeam = teamMap.get(thirdPlace.winnerTeamId) || thirdPlace.winnerTeamId;
+      const fourthTeam = teamMap.get(thirdPlace.loserTeamId) || thirdPlace.loserTeamId;
+      text += `🥉 *3º Colocado (Bronze):* *${thirdTeam}*\n`;
+      text += `🎖️ *4º Colocado:* *${fourthTeam}*\n`;
+    }
+    text += `\n`;
+
+    // 3. Grande Final com destaque máximo
+    text += `👑 *GRANDE FINAL DO TORNEIO:*\n`;
+    const fFinal = formatKnockoutMatchForWhatsApp(finalMatch, teamMap, true);
+    text += `• Placar: ${fFinal.headline}\n`;
+    if (fFinal.penaltiesLine) text += `  ${fFinal.penaltiesLine}\n`;
+
+    if (finalMatch && finalMatch.status === 'FINISHED' && finalMatch.winnerTeamId && finalMatch.loserTeamId) {
+      const champion = teamMap.get(finalMatch.winnerTeamId) || finalMatch.winnerTeamId;
+      const runnerUp = teamMap.get(finalMatch.loserTeamId) || finalMatch.loserTeamId;
+      text += `\n🌟 *PÓDIO DOS CAMPEÕES:*\n`;
+      text += `🏆 *CAMPEÃO:* 🥇 *${champion}*\n`;
+      text += `🥈 *VICE-CAMPEÃO:* *${runnerUp}*\n`;
+    }
   }
 
   const now = new Date();

@@ -5,6 +5,22 @@ project: "Rockgol - São Patrício"
 
 # Histórico de Sessões — Rockgol - São Patrício
 
+## [2026-10-08] Detalhamento de Pênaltis no Mata-Mata e Destaque da Grande Final / Pódio no WhatsApp
+- **Objetivo da Sessão:** Aprimorar o texto gerado para compartilhamento no WhatsApp para exibir explicitamente o resultado e vencedor das disputas de pênaltis em empates do mata-mata, além de dar destaque visual de honra à Grande Final (Campeão/Vice) e à disputa de 3º e 4º colocados.
+- **Vínculo à Task:** FEAT-2026-10-001 (Compartilhamento & Comunicação do Torneio)
+- **Atividades Realizadas:**
+  - Implementação da função `formatKnockoutMatchForWhatsApp` em `src/services/pdfExportService.ts` com tratamento completo para empates no tempo regulamentar com decisão de pênaltis (`🎯 Pênaltis: TimeA X × Y TimeB ➔ Time vencedor nos pênaltis!`).
+  - Criação de blocos temáticos destacados na mensagem:
+    - `🥊 SEMIFINAIS` com confrontos e pênaltis;
+    - `🥉 DISPUTA DO 3º LUGAR` com definição do 3º Colocado (Bronze) e 4º Colocado;
+    - `👑 GRANDE FINAL DO TORNEIO` com coroação e bloco exclusivo `🌟 PÓDIO DOS CAMPEÕES: 🏆 CAMPEÃO / 🥈 VICE-CAMPEÃO`.
+  - Adição de 2 novos testes unitários em `tests/unit/pwaSetup.test.ts` cobrindo cenários com e sem pênaltis (totalizando 35/35 testes verdes).
+  - Execução de build de produção (`npm run build`) validado com código 0 e sincronização com a plataforma Android via `npx cap sync android`.
+- **Decisões Tomadas:**
+  - Separar visualmente o chaveamento em divisores claros no WhatsApp para leitura instantânea pelos atletas e organizadores nos grupos.
+- **Próximos Passos:**
+  - Usuário faz o push para o GitHub e baixa o novo APK atualizado na aba Actions.
+
 ## [2026-10-08] Correção do Download de Backup JSON com Seleção Nativa de Local (Android & Web)
 - **Objetivo da Sessão:** Identificar a causa raiz do download de JSON não salvar arquivos no aparelho celular e implementar mecanismo para que o usuário possa escolher o local exato (pasta / aplicativo) onde salvar o backup.
 - **Vínculo à Task:** FEAT-2026-10-001 (Persistência & Backup Mobile)
