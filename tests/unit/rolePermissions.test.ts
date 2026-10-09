@@ -3,7 +3,7 @@ import React from 'react';
 import { TeamsTab } from '../../src/components/TeamsTab';
 import { ScoresheetTab } from '../../src/components/ScoresheetTab';
 import { PlayerModal } from '../../src/components/PlayerModal';
-import { App } from '../../src/App';
+import { App, AppProps } from '../../src/App';
 import { Team, Match } from '../../src/types/tournament';
 
 describe('Permissões de Perfil de Acesso (rolePermissions)', () => {
@@ -16,13 +16,13 @@ describe('Permissões de Perfil de Acesso (rolePermissions)', () => {
     {
       id: 'm1',
       roundNumber: 1,
-      matchOrder: 1,
-      court: 'Quadra A',
-      time: '08:00',
+      roundTime: '08:00',
+      field: 'Campo 1',
       homeTeamId: 'team_1',
       awayTeamId: 'team_2',
       homeScore: null,
-      awayScore: null
+      awayScore: null,
+      status: 'PENDING'
     }
   ];
 
@@ -92,8 +92,8 @@ describe('Permissões de Perfil de Acesso (rolePermissions)', () => {
   });
 
   it('deve aceitar a prop role em App (padrão torcida ou juiz)', () => {
-    const torcidaApp = React.createElement(App, { role: 'torcida' });
-    const juizApp = React.createElement(App, { role: 'juiz' });
+    const torcidaApp = React.createElement<AppProps>(App, { role: 'torcida' });
+    const juizApp = React.createElement<AppProps>(App, { role: 'juiz' });
 
     expect(torcidaApp.props.role).toBe('torcida');
     expect(juizApp.props.role).toBe('juiz');

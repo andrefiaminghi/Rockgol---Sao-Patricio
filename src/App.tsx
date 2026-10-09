@@ -16,7 +16,8 @@ import { syncMatchScoresFromScoresheets, removeScoresheetAndResetMatch } from '.
 import {
   pushScoresheetToSupabase,
   deleteScoresheetFromSupabase,
-  pushTeamToSupabase
+  pushTeamToSupabase,
+  pullTournamentFromSupabase
 } from './services/supabaseService';
 import { Team } from './types/tournament';
 import { Header } from './components/Header';
@@ -43,6 +44,31 @@ export function App({ role = 'torcida' }: AppProps = {}) {
   const [activeTab, setActiveTab] = useState<TabType>('matches');
   const [useDeviceFrame, setUseDeviceFrame] = useState<boolean>(true);
   const [currentTime, setCurrentTime] = useState<string>('12:00');
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState<boolean>(() =>
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Monitora conectividade com a internet
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(prev => (prev === msg ? null : prev));
+    }, 3500);
+  };
 
   // Relógio do status bar do aparelho
   useEffect(() => {
@@ -223,6 +249,59 @@ export function App({ role = 'torcida' }: AppProps = {}) {
     });
   };
 
+  // Handler para sincronizar dados com a nuvem (Supabase)
+  const handleSync = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    try {
+      const remoteData = await pullTournamentFromSupabase();
+      const teamsFromRemote = remoteData?.teams || [];
+      const sheetsFromRemote = remoteData?.scoresheets || {};
+
+      setState(prev => {
+        const mergedTeams =
+          teamsFromRemote.length > 0
+            ? prev.teams.map(localTeam => {
+                const remoteTeam = teamsFromRemote.find(t => t.id === localTeam.id);
+                return remoteTeam
+                  ? { ...localTeam, name: remoteTeam.name, players: remoteTeam.players }
+                  : localTeam;
+              })
+            : prev.teams;
+
+        const updatedSheets = { ...prev.scoresheets, ...sheetsFromRemote };
+        const { matches, knockoutMatches } = syncMatchScoresFromScoresheets(
+          prev.matches,
+          prev.knockoutMatches,
+          updatedSheets
+        );
+
+        const updatedState: TournamentState = {
+          ...prev,
+          teams: mergedTeams,
+          scoresheets: updatedSheets,
+          matches,
+          knockoutMatches,
+          lastUpdated: new Date().toISOString()
+        };
+        saveTournamentState(updatedState);
+        return updatedState;
+      });
+
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(
+        now.getMinutes()
+      ).padStart(2, '0')}`;
+      setLastSyncTime(timeStr);
+      showToast('Dados sincronizados com sucesso!');
+    } catch (err) {
+      console.warn('Falha na sincronização com o Supabase:', err);
+      showToast('Não foi possível sincronizar no momento. Verifique a internet.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleRestoreState = (newState: TournamentState) => {
     setState(newState);
     saveTournamentState(newState);
@@ -235,13 +314,25 @@ export function App({ role = 'torcida' }: AppProps = {}) {
 
   // Conteúdo interno do aplicativo
   const AppContent = (
-    <div data-role={role} className="flex flex-col min-h-full bg-[#0B1320] text-white font-sans selection:bg-[#00D26A] selection:text-[#0B1320]">
+    <div data-role={role} className="flex flex-col min-h-full bg-[#0B1320] text-white font-sans selection:bg-[#00D26A] selection:text-[#0B1320] relative">
       <Header
+        role={role}
+        isSyncing={isSyncing}
+        lastSyncTime={lastSyncTime}
+        isOnline={isOnline}
+        onSync={handleSync}
         finishedMatchesCount={finishedMatchesCount}
         totalMatchesCount={state.matches.length}
         onQuickSave={() => setActiveTab('export')}
         onResetPrompt={handleResetState}
       />
+
+      {toastMessage && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#121D2F] text-white px-4 py-2.5 rounded-2xl border border-[#00D26A]/40 shadow-xl shadow-black/50 text-xs font-bold flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+          <Sparkles className="w-4 h-4 text-[#00D26A]" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
 
       <IOSInstallBanner />
 

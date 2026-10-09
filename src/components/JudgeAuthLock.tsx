@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, Delete, ArrowRight, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Lock, Delete, AlertCircle } from 'lucide-react';
 
 export const JUDGE_PIN_STORAGE_KEY = 'rockgol_judge_authenticated';
 export const JUDGE_PIN_DEFAULT = '2026';
