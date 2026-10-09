@@ -8,7 +8,8 @@ import {
   MapPin,
   Award,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from 'lucide-react';
 import { Match, KnockoutMatch, Team, MatchScoresheet } from '../types/tournament';
 import { getTopScorers, getSuspensions } from '../services/scoresheetService';
@@ -256,8 +257,27 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
                     </div>
                   )}
 
-                  {/* Botão de Abrir Súmula */}
-                  <div className="mt-3 pt-2 flex justify-end">
+                  {/* Botões de Ação da Súmula */}
+                  <div className="mt-3 pt-2 flex items-center justify-end gap-2">
+                    {hasSheet && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (
+                            confirm(
+                              'Deseja realmente limpar a súmula desta partida? Os placares na aba Súmula e na aba Jogos serão zerados.'
+                            )
+                          ) {
+                            onDeleteScoresheet(m.id);
+                          }
+                        }}
+                        className="text-xs font-bold px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20"
+                        title="Limpar Súmula e Zerar Placar"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Limpar</span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       disabled={!homeTeam || !awayTeam}

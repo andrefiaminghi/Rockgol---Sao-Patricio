@@ -12,7 +12,7 @@ import {
   resolveKnockoutMatch,
   updateFinalsFromSemifinals
 } from './services/knockoutService';
-import { syncMatchScoresFromScoresheets } from './services/scoresheetService';
+import { syncMatchScoresFromScoresheets, removeScoresheetAndResetMatch } from './services/scoresheetService';
 import { Header } from './components/Header';
 import { Navigation, TabType } from './components/Navigation';
 import { MatchesTab } from './components/MatchesTab';
@@ -161,41 +161,21 @@ export function App() {
     });
   };
 
-  // Handler para remover súmula (reverte ao modo de placar manual)
+  // Handler para remover/limpar súmula (zera o placar e desvincula a súmula)
   const handleDeleteScoresheet = (matchId: string) => {
     setState(prev => {
-      const updatedSheets = { ...prev.scoresheets };
-      delete updatedSheets[matchId];
-
-      const updatedMatches = prev.matches.map(m =>
-        m.id === matchId ? { ...m, homeScore: null, awayScore: null, status: 'PENDING' as const } : m
-      );
-      const updatedKnockout = prev.knockoutMatches.map(m =>
-        m.id === matchId
-          ? {
-              ...m,
-              homeScore: null,
-              awayScore: null,
-              homePenalties: null,
-              awayPenalties: null,
-              winnerTeamId: null,
-              loserTeamId: null,
-              status: 'PENDING' as const
-            }
-          : m
-      );
-
-      const { matches, knockoutMatches } = syncMatchScoresFromScoresheets(
-        updatedMatches,
-        updatedKnockout,
-        updatedSheets
+      const { matches, knockoutMatches, scoresheets } = removeScoresheetAndResetMatch(
+        matchId,
+        prev.matches,
+        prev.knockoutMatches,
+        prev.scoresheets
       );
 
       const updatedState: TournamentState = {
         ...prev,
         matches,
         knockoutMatches,
-        scoresheets: updatedSheets,
+        scoresheets,
         lastUpdated: new Date().toISOString()
       };
       saveTournamentState(updatedState);

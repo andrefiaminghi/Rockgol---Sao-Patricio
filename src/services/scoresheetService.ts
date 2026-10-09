@@ -223,3 +223,54 @@ export function isPlayerSuspended(
     s => s.teamId === teamId && s.playerIndex === playerIndex && s.suspendedForRoundNumber === roundNumber
   );
 }
+
+/**
+ * Remove a súmula da partida informada e reseta seus placares tanto na fase de grupos quanto no mata-mata,
+ * recalculando o chaveamento das etapas seguintes.
+ */
+export function removeScoresheetAndResetMatch(
+  matchId: string,
+  matches: Match[],
+  knockoutMatches: KnockoutMatch[],
+  scoresheets: Record<string, MatchScoresheet>
+): {
+  matches: Match[];
+  knockoutMatches: KnockoutMatch[];
+  scoresheets: Record<string, MatchScoresheet>;
+} {
+  const updatedSheets = { ...scoresheets };
+  delete updatedSheets[matchId];
+
+  const updatedMatches = matches.map(m =>
+    m.id === matchId
+      ? { ...m, homeScore: null, awayScore: null, status: 'PENDING' as const }
+      : m
+  );
+
+  const updatedKnockout = knockoutMatches.map(m =>
+    m.id === matchId
+      ? {
+          ...m,
+          homeScore: null,
+          awayScore: null,
+          homePenalties: null,
+          awayPenalties: null,
+          winnerTeamId: null,
+          loserTeamId: null,
+          status: 'PENDING' as const
+        }
+      : m
+  );
+
+  const synced = syncMatchScoresFromScoresheets(
+    updatedMatches,
+    updatedKnockout,
+    updatedSheets
+  );
+
+  return {
+    matches: synced.matches,
+    knockoutMatches: synced.knockoutMatches,
+    scoresheets: updatedSheets
+  };
+}

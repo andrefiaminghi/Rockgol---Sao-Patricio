@@ -131,7 +131,7 @@ export const ScoresheetModal: React.FC<ScoresheetModalProps> = ({
   };
 
   const handleDelete = () => {
-    if (confirm('Deseja realmente remover esta súmula? O placar voltará a ser controlado manualmente.')) {
+    if (confirm('Deseja realmente limpar esta súmula? Os gols, cartões e placares desta partida na aba Súmula e na aba Jogos serão zerados.')) {
       if (onDelete) {
         onDelete(match.id);
       }
@@ -480,9 +480,10 @@ export const ScoresheetModal: React.FC<ScoresheetModalProps> = ({
             <button
               type="button"
               onClick={handleDelete}
-              className="text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-xl border border-red-500/20 transition-colors"
+              className="text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-xl border border-red-500/20 transition-colors flex items-center gap-1.5"
             >
-              Remover Súmula
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Limpar Súmula</span>
             </button>
           ) : (
             <div />

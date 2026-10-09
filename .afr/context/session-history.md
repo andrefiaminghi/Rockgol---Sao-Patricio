@@ -1,9 +1,20 @@
 ---
-last_updated: "2026-10-09T13:17:00-03:00"
+last_updated: "2026-10-09T13:28:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
+
+## [2026-10-09] Limpeza de Súmula e Zeramento Completo de Placares (Aba Súmula e Aba Jogos)
+- **Objetivo da Sessão:** Atender à solicitação de que, ao limpar/remover uma súmula, os placares da partida correspondente sejam imediatamente zerados (voltando ao estado pendente `- × -`) tanto na lista de partidas da aba Súmula quanto nos campos da aba Jogos e na tabela de classificação/mata-mata.
+- **Vínculo à Task:** FEAT-2026-10-002 (Limpeza de Súmula e Integridade de Estado)
+- **Atividades Realizadas:**
+  - **Função Pura de Domínio:** Criada a função `removeScoresheetAndResetMatch` em [src/services/scoresheetService.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/services/scoresheetService.ts) que exclui a súmula, define `homeScore = null`, `awayScore = null`, `status = 'PENDING'` e re-sincroniza todas as dependências.
+  - **Proteção do Chaveamento Mata-Mata:** Atualizado `updateFinalsFromSemifinals` em [src/services/knockoutService.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/services/knockoutService.ts) para que, se a semifinal for limpa, a vaga na final ou 3º lugar volte para `null` ("A definir") e qualquer placar pendente nas finais seja zerado.
+  - **Interface do Modal:** Atualizado [src/components/ScoresheetModal.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/ScoresheetModal.tsx) com botão explícito "Limpar Súmula" e alerta descritivo de confirmação.
+  - **Ação Rápida no Card:** Adicionado botão de atalho "Limpar" no card da partida em [src/components/ScoresheetTab.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/ScoresheetTab.tsx) para permitir zerar súmulas registradas diretamente da lista.
+  - **Testes Automatizados:** Adicionados 2 novos testes de integração em [tests/unit/scoresheetIntegration.test.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetIntegration.test.ts), validando que a limpeza da súmula na 1ª fase e nas semifinais zera placares e remove pontos/confrontos da tabela.
+  - **Verificação Completa:** 66/66 testes aprovados no Vitest (`npm test`) e compilação de produção (`npm run build`) validada sem erros.
 
 ## [2026-10-09] Correção da Propagação de Semifinais da Súmula para Grande Final e 3º Lugar
 - **Objetivo da Sessão:** Corrigir a falha em que o preenchimento da súmula das semifinais (`sf1` e `sf2`) não estava alimentando os times vencedores na Grande Final (`final`) e perdedores na Disputa de 3º Lugar (`third_place`).
