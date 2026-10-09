@@ -22,12 +22,17 @@ import { KnockoutTab } from './components/KnockoutTab';
 import { ExportTab } from './components/ExportTab';
 import { ScoresheetTab } from './components/ScoresheetTab';
 import { IOSInstallBanner } from './components/IOSInstallBanner';
+import { JudgeAuthLock, isJudgeAuthenticated } from './components/JudgeAuthLock';
 
 export interface AppProps {
   role?: 'torcida' | 'juiz';
 }
 
 export function App({ role = 'torcida' }: AppProps = {}) {
+  const [isJudgeAuthed, setIsJudgeAuthed] = useState<boolean>(() => {
+    if (role !== 'juiz') return true;
+    return isJudgeAuthenticated();
+  });
   const [state, setState] = useState<TournamentState>(() => loadTournamentState());
   const [activeTab, setActiveTab] = useState<TabType>('matches');
   const [useDeviceFrame, setUseDeviceFrame] = useState<boolean>(true);
@@ -262,6 +267,11 @@ export function App({ role = 'torcida' }: AppProps = {}) {
       <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
+
+  // Guarda de autenticação por PIN no PWA do Árbitro
+  if (role === 'juiz' && !isJudgeAuthed) {
+    return <JudgeAuthLock onAuthenticated={() => setIsJudgeAuthed(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#070D17] text-white flex flex-col justify-center items-center font-sans antialiased">
