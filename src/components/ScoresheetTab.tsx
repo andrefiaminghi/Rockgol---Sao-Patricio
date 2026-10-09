@@ -6,12 +6,11 @@ import {
   Calendar,
   Clock,
   MapPin,
-  ChevronRight,
   Award,
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
-import { Match, KnockoutMatch, Team, MatchScoresheet, PlayerSuspension } from '../types/tournament';
+import { Match, KnockoutMatch, Team, MatchScoresheet } from '../types/tournament';
 import { getTopScorers, getSuspensions } from '../services/scoresheetService';
 import { ScoresheetModal } from './ScoresheetModal';
 
@@ -181,7 +180,6 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
               const hasSheet = Boolean(sheet && sheet.hasScoresheet);
 
               const matchTime = 'roundTime' in m ? m.roundTime : m.time;
-              const title = 'roundNumber' in m ? `Rodada ${m.roundNumber}` : m.title;
 
               return (
                 <div

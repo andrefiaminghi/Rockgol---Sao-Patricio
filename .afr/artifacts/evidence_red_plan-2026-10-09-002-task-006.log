@@ -1,0 +1,27 @@
+======================================================================
+FASE RED - EVIDÊNCIA DE FALHA
+Task: plan-2026-10-09-002-task-006
+Comando: npm test tests/unit/scoresheetExport.test.ts
+Data: 2026-10-09T11:53:00-03:00
+Status: FAIL (Esperado na Fase RED)
+======================================================================
+
+> rockgol-sao-patricio@1.0.0 test
+> vitest run tests/unit/scoresheetExport.test.ts
+
+ RUN  v3.2.7 C:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio
+
+ ❯ tests/unit/scoresheetExport.test.ts (5 tests | 5 failed) 10ms
+   × Exportação de Súmulas e WhatsApp (scoresheetExport) > formatTopScorersForWhatsApp > deve retornar mensagem amigável quando não houver artilheiros registrados 4ms
+     → (0 , formatTopScorersForWhatsApp) is not a function
+   × Exportação de Súmulas e WhatsApp (scoresheetExport) > formatTopScorersForWhatsApp > deve formatar lista de artilheiros com medalhas e quantidade de gols 0ms
+     → (0 , formatTopScorersForWhatsApp) is not a function
+   × Exportação de Súmulas e WhatsApp (scoresheetExport) > formatSuspensionsForWhatsApp > deve retornar mensagem de fair play quando não houver atletas suspensos 0ms
+     → (0 , formatSuspensionsForWhatsApp) is not a function
+   × Exportação de Súmulas e WhatsApp (scoresheetExport) > formatSuspensionsForWhatsApp > deve formatar suspensões por cartão vermelho direto, duplo amarelo e acúmulo 0ms
+     → (0 , formatSuspensionsForWhatsApp) is not a function
+   × Exportação de Súmulas e WhatsApp (scoresheetExport) > Funções de compartilhamento direto para WhatsApp > deve exportar as funções shareTopScorersToWhatsApp e shareSuspensionsToWhatsApp 4ms
+     → expected 'undefined' to be 'function' // Object.is equality
+
+Test Files  1 failed (1)
+Tests  5 failed (5)

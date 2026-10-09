@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { syncMatchScoresFromScoresheets } from '../../src/services/scoresheetService';
 import { calculateStandings } from '../../src/services/standingsService';
-import { Match, KnockoutMatch, Team, MatchScoresheet, TournamentState } from '../../src/types/tournament';
+import { MatchScoresheet, TournamentState } from '../../src/types/tournament';
 import { createDefaultTournamentState } from '../../src/services/storageService';
 
 describe('Integração de Súmula e Estado Global', () => {
@@ -29,7 +29,7 @@ describe('Integração de Súmula e Estado Global', () => {
     };
 
     const updatedSheets = { ...defaultState.scoresheets, [sheet.matchId]: sheet };
-    const { matches, knockoutMatches } = syncMatchScoresFromScoresheets(
+    const { matches } = syncMatchScoresFromScoresheets(
       defaultState.matches,
       defaultState.knockoutMatches,
       updatedSheets

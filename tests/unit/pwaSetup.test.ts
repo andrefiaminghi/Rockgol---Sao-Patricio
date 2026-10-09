@@ -49,6 +49,7 @@ describe('Exportação PDF, Backup e Integração Geral (App & ExportTab)', () =
         },
         ...INITIAL_KNOCKOUT_MATCHES.slice(1)
       ],
+      scoresheets: {},
       version: 1,
       lastUpdated: '2026-10-08T18:00:00.000Z'
     };
@@ -125,6 +126,7 @@ describe('Exportação PDF, Backup e Integração Geral (App & ExportTab)', () =
           status: 'FINISHED'
         }
       ],
+      scoresheets: {},
       version: 1,
       lastUpdated: '2026-10-08T18:00:00.000Z'
     };
@@ -184,6 +186,7 @@ describe('Configurações de PWA, iOS e Resiliência Offline', () => {
       teams: INITIAL_TEAMS,
       matches: INITIAL_MATCHES,
       knockoutMatches: INITIAL_KNOCKOUT_MATCHES,
+      scoresheets: {},
       version: 1,
       lastUpdated: '2026-10-09T10:00:00.000Z'
     };
@@ -212,6 +215,7 @@ describe('Configurações de PWA, iOS e Resiliência Offline', () => {
       teams: INITIAL_TEAMS,
       matches: INITIAL_MATCHES,
       knockoutMatches: INITIAL_KNOCKOUT_MATCHES,
+      scoresheets: {},
       version: 1,
       lastUpdated: '2026-10-09T10:00:00.000Z'
     };

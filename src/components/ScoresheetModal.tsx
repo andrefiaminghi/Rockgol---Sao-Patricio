@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Trash2, AlertTriangle, Check, ShieldAlert } from 'lucide-react';
+import { X, Plus, Trash2, Check } from 'lucide-react';
 import { Match, KnockoutMatch, Team, MatchScoresheet, GoalEvent, CardEvent, PlayerSuspension } from '../types/tournament';
 import { isPlayerSuspended } from '../services/scoresheetService';
 

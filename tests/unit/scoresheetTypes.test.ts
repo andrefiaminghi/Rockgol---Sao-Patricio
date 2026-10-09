@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { loadTournamentState, saveTournamentState, createDefaultTournamentState } from '../../src/services/storageService';
-import { GoalEvent, CardEvent, MatchScoresheet, TournamentState } from '../../src/types/tournament';
+import { MatchScoresheet } from '../../src/types/tournament';
 
 describe('Scoresheet Types & Storage Retrocompatibility', () => {
   let storageStore: Record<string, string> = {};

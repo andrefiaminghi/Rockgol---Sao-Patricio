@@ -1,7 +1,8 @@
 import { jsPDF } from 'jspdf';
 import { Share } from '@capacitor/share';
-import { TournamentState, KnockoutMatch } from '../types/tournament';
+import { TournamentState, KnockoutMatch, TopScorer, PlayerSuspension } from '../types/tournament';
 import { calculateStandings } from './standingsService';
+import { getTopScorers, getSuspensions } from './scoresheetService';
 
 export interface GeneratePdfResult {
   blob: Blob;
@@ -283,10 +284,210 @@ export function generateAndDownloadTournamentPdf(state: TournamentState): Genera
     y
   );
 
-  // Rodapé do documento
+  // Rodapé da Página 1
   doc.setFontSize(7.5);
   doc.setTextColor(148, 163, 184);
-  doc.text('RockGol São Patrício Bar 2026 • Documento Oficial emitido via Aplicativo', 105, 285, { align: 'center' });
+  doc.text('RockGol São Patrício Bar 2026 • Documento Oficial emitido via Aplicativo (Página 1 de 2)', 105, 285, { align: 'center' });
+
+  // ----------------------------------------------------
+  // Página 2: Súmula Oficial, Artilharia e Disciplina
+  // ----------------------------------------------------
+  doc.addPage('a4', 'portrait');
+
+  // Top Bar Decorativo Página 2
+  doc.setFillColor(darkBg[0], darkBg[1], darkBg[2]);
+  doc.rect(0, 0, 210, 24, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('ROCKGOL 2026 — SÚMULA, ARTILHARIA & DISCIPLINA', 14, 11);
+
+  doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+  doc.setFontSize(8.5);
+  doc.text('BOLETIM TÉCNICO OFICIAL DE GOLS, CARTÕES E SUSPENSÕES', 14, 17);
+
+  doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+  doc.setLineWidth(0.8);
+  doc.line(14, 24, 196, 24);
+
+  // Seção 3: Artilharia Oficial
+  const topScorers = getTopScorers(state.teams, state.scoresheets || {});
+  let p2Y = 32;
+  doc.setTextColor(11, 19, 32);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('3. Quadro Oficial de Artilharia', 14, p2Y);
+
+  p2Y += 5;
+  doc.setFillColor(18, 29, 47);
+  doc.rect(14, p2Y, 182, 6, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'bold');
+  doc.text('POS', 18, p2Y + 4.5);
+  doc.text('ATLETA', 35, p2Y + 4.5);
+  doc.text('EQUIPE', 110, p2Y + 4.5);
+  doc.text('GOLS', 180, p2Y + 4.5, { align: 'center' });
+
+  p2Y += 6;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+
+  if (topScorers.length === 0) {
+    doc.setFillColor(248, 250, 252);
+    doc.rect(14, p2Y, 182, 7, 'F');
+    doc.setTextColor(100, 116, 139);
+    doc.text('Nenhum gol registrado em súmula até o momento.', 18, p2Y + 4.5);
+    p2Y += 9;
+  } else {
+    const displayedScorers = topScorers.slice(0, 8);
+    displayedScorers.forEach((s, idx) => {
+      const rowHeight = 6;
+      doc.setFillColor(idx % 2 === 1 ? 248 : 255, idx % 2 === 1 ? 250 : 255, idx % 2 === 1 ? 252 : 255);
+      doc.rect(14, p2Y, 182, rowHeight, 'F');
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.2);
+      doc.line(14, p2Y + rowHeight, 196, p2Y + rowHeight);
+
+      doc.setTextColor(15, 23, 42);
+      doc.setFont('helvetica', 'bold');
+      const posLabel = idx === 0 ? '1º (Artilheiro)' : `${idx + 1}º`;
+      doc.text(posLabel, 18, p2Y + 4);
+      doc.text(s.playerName, 35, p2Y + 4);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(71, 85, 105);
+      doc.text(s.teamName, 110, p2Y + 4);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 150, 70);
+      doc.text(String(s.goals), 180, p2Y + 4, { align: 'center' });
+
+      p2Y += rowHeight;
+    });
+    p2Y += 4;
+  }
+
+  // Seção 4: Quadro Disciplinar & Suspensões
+  const suspensions = getSuspensions(state.teams, state.matches, state.scoresheets || {});
+  p2Y += 4;
+  doc.setTextColor(11, 19, 32);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('4. Quadro de Suspensões Disciplinares', 14, p2Y);
+
+  p2Y += 5;
+  doc.setFillColor(18, 29, 47);
+  doc.rect(14, p2Y, 182, 6, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'bold');
+  doc.text('ATLETA', 18, p2Y + 4.5);
+  doc.text('EQUIPE', 75, p2Y + 4.5);
+  doc.text('RODADA SUSPENSA', 135, p2Y + 4.5, { align: 'center' });
+  doc.text('MOTIVO', 175, p2Y + 4.5, { align: 'center' });
+
+  p2Y += 6;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+
+  if (suspensions.length === 0) {
+    doc.setFillColor(240, 253, 244);
+    doc.rect(14, p2Y, 182, 7, 'F');
+    doc.setTextColor(0, 150, 70);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Nenhum atleta suspenso no momento. Fair play total!', 18, p2Y + 4.5);
+    p2Y += 9;
+  } else {
+    suspensions.forEach((s, idx) => {
+      const rowHeight = 6;
+      doc.setFillColor(idx % 2 === 1 ? 248 : 255, idx % 2 === 1 ? 250 : 255, idx % 2 === 1 ? 252 : 255);
+      doc.rect(14, p2Y, 182, rowHeight, 'F');
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.2);
+      doc.line(14, p2Y + rowHeight, 196, p2Y + rowHeight);
+
+      doc.setTextColor(15, 23, 42);
+      doc.setFont('helvetica', 'bold');
+      doc.text(s.playerName, 18, p2Y + 4);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(71, 85, 105);
+      doc.text(s.teamName, 75, p2Y + 4);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(220, 38, 38);
+      doc.text(`Rodada ${s.suspendedForRoundNumber}`, 135, p2Y + 4, { align: 'center' });
+
+      const motivoText = s.reason === 'RED_CARD' ? 'Vermelho Direto' : s.reason === 'DOUBLE_YELLOW' ? '2 Amarelos no Jogo' : '2 Amarelos Acum.';
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(71, 85, 105);
+      doc.text(motivoText, 175, p2Y + 4, { align: 'center' });
+
+      p2Y += rowHeight;
+    });
+    p2Y += 4;
+  }
+
+  // Seção 5: Observações da Arbitragem
+  const observationsList: { matchTitle: string; obs: string }[] = [];
+  const matchMap = new Map<string, string>();
+  state.matches.forEach(m => {
+    const h = teamMap.get(m.homeTeamId) || m.homeTeamId;
+    const a = teamMap.get(m.awayTeamId) || m.awayTeamId;
+    matchMap.set(m.id, `Rodada ${m.roundNumber} • ${h} × ${a}`);
+  });
+  state.knockoutMatches.forEach(km => {
+    matchMap.set(km.id, km.title);
+  });
+
+  if (state.scoresheets) {
+    Object.values(state.scoresheets).forEach(sheet => {
+      if (sheet.hasScoresheet && sheet.observations && sheet.observations.trim().length > 0) {
+        const title = matchMap.get(sheet.matchId) || `Partida ${sheet.matchId}`;
+        observationsList.push({ matchTitle: title, obs: sheet.observations.trim() });
+      }
+    });
+  }
+
+  p2Y += 4;
+  doc.setTextColor(11, 19, 32);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('5. Observações da Arbitragem', 14, p2Y);
+
+  p2Y += 5;
+  if (observationsList.length === 0) {
+    doc.setFillColor(248, 250, 252);
+    doc.rect(14, p2Y, 182, 7, 'F');
+    doc.setTextColor(100, 116, 139);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.text('Sem ocorrências ou observações disciplinares registradas pelos juízes.', 18, p2Y + 4.5);
+  } else {
+    observationsList.slice(0, 4).forEach(item => {
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.2);
+      doc.rect(14, p2Y, 182, 8, 'FD');
+
+      doc.setTextColor(15, 23, 42);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.text(item.matchTitle + ':', 18, p2Y + 4);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(71, 85, 105);
+      doc.text(item.obs.slice(0, 75), 85, p2Y + 4);
+      p2Y += 9;
+    });
+  }
+
+  // Rodapé da Página 2
+  doc.setFontSize(7.5);
+  doc.setTextColor(148, 163, 184);
+  doc.text('RockGol São Patrício Bar 2026 • Documento Oficial emitido via Aplicativo (Página 2 de 2)', 105, 285, { align: 'center' });
 
   // Nome do arquivo
   const filename = `RockGol_2026_Relatorio_${new Date().toISOString().slice(0, 10)}.pdf`;
@@ -447,4 +648,60 @@ export async function shareReportToWhatsApp(text: string): Promise<void> {
   const encodedText = encodeURIComponent(text);
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
   window.location.href = whatsappUrl;
+}
+
+/**
+ * Formata lista de artilheiros para mensagem do WhatsApp
+ */
+export function formatTopScorersForWhatsApp(scorers: TopScorer[]): string {
+  let text = `*⚽ ROCKGOL 2026 — ARTILHARIA OFICIAL*\n\n`;
+  if (scorers.length === 0) {
+    return text + `Nenhum gol registrado até o momento.\n`;
+  }
+  scorers.forEach((s, idx) => {
+    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '⚽';
+    text += `${medal} *${s.playerName}* (${s.teamName}) — *${s.goals}* gol(s)\n`;
+  });
+  const now = new Date();
+  const dateStr = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  text += `\n🕒 _Atualizado em ${dateStr}_\n`;
+  text += `📱 _RockGol 2026 — App Oficial_`;
+  return text;
+}
+
+/**
+ * Formata quadro disciplinar de suspensões para mensagem do WhatsApp
+ */
+export function formatSuspensionsForWhatsApp(suspensions: PlayerSuspension[]): string {
+  let text = `*🚫 ROCKGOL 2026 — QUADRO DE SUSPENSÕES*\n\n`;
+  if (suspensions.length === 0) {
+    return text + `Nenhum atleta suspenso no momento. Fair play total! 👏\n`;
+  }
+  suspensions.forEach(s => {
+    const motivo = s.reason === 'RED_CARD' ? '🟥 Cartão Vermelho' : s.reason === 'DOUBLE_YELLOW' ? '🟨🟨 2 Amarelos no Jogo' : '🟨 2 Amarelos Acumulados';
+    text += `• *${s.playerName}* (${s.teamName})\n  └ Suspenso para a Rodada ${s.suspendedForRoundNumber} (${motivo})\n`;
+  });
+  const now = new Date();
+  const dateStr = `${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  text += `\n🕒 _Atualizado em ${dateStr}_\n`;
+  text += `📱 _RockGol 2026 — App Oficial_`;
+  return text;
+}
+
+/**
+ * Dispara o compartilhamento da artilharia oficial diretamente no WhatsApp
+ */
+export async function shareTopScorersToWhatsApp(state: TournamentState): Promise<void> {
+  const scorers = getTopScorers(state.teams, state.scoresheets || {});
+  const text = formatTopScorersForWhatsApp(scorers);
+  await shareReportToWhatsApp(text);
+}
+
+/**
+ * Dispara o compartilhamento do quadro de suspensões diretamente no WhatsApp
+ */
+export async function shareSuspensionsToWhatsApp(state: TournamentState): Promise<void> {
+  const suspensions = getSuspensions(state.teams, state.matches, state.scoresheets || {});
+  const text = formatSuspensionsForWhatsApp(suspensions);
+  await shareReportToWhatsApp(text);
 }
