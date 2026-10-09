@@ -20,8 +20,8 @@ describe('Autenticação por PIN da Arbitragem (JudgeAuthLock)', () => {
     };
   });
 
-  it('deve ter o PIN padrão definido como 2026', () => {
-    expect(JUDGE_PIN_DEFAULT).toBe('2026');
+  it('deve ter o PIN padrão definido como 1991', () => {
+    expect(JUDGE_PIN_DEFAULT).toBe('1991');
   });
 
   it('deve iniciar desautenticado por padrão quando o localStorage estiver vazio', () => {

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ShieldCheck, Lock, Delete, AlertCircle } from 'lucide-react';
 
 export const JUDGE_PIN_STORAGE_KEY = 'rockgol_judge_authenticated';
-export const JUDGE_PIN_DEFAULT = '2026';
+export const JUDGE_PIN_DEFAULT = '1991';
 
 export function isJudgeAuthenticated(): boolean {
   if (typeof window === 'undefined') return false;
@@ -88,11 +88,10 @@ export const JudgeAuthLock: React.FC<JudgeAuthLockProps> = ({ onAuthenticated })
             return (
               <div
                 key={idx}
-                className={`w-4 h-4 rounded-full transition-all duration-200 ${
-                  hasDigit
+                className={`w-4 h-4 rounded-full transition-all duration-200 ${hasDigit
                     ? 'bg-[#00D26A] scale-110 shadow-[0_0_12px_rgba(0,210,106,0.5)]'
                     : 'bg-[#1E2D44] border border-[#2D3F5A]'
-                }`}
+                  }`}
               />
             );
           })}

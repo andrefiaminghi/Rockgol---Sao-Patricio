@@ -36,7 +36,7 @@ CREATE POLICY "Permitir escrita de súmulas via chave pública" ON public.scores
 CREATE TABLE IF NOT EXISTS public.teams (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
-  color TEXT NOT NULL,
+  color TEXT DEFAULT '',
   players JSONB NOT NULL DEFAULT '[]'::jsonb,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
