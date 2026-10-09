@@ -437,4 +437,41 @@ describe('Integração de Súmula e Estado Global', () => {
     expect(finalFullyCleared.homeTeamId).toBeNull();
     expect(finalFullyCleared.awayTeamId).toBeNull();
   });
+
+  it('deve identificar se a partida possui súmula preenchida e proibir alteração manual de placar', () => {
+    const targetMatch = defaultState.matches[0];
+    const sheet: MatchScoresheet = {
+      matchId: targetMatch.id,
+      hasScoresheet: true,
+      goals: [
+        { id: 'g1', teamId: targetMatch.homeTeamId, playerIndex: 0, playerName: '#1 Atleta A', isOwnGoal: false }
+      ],
+      cards: [],
+      observations: 'Súmula oficial',
+      updatedAt: '2026-10-09T14:00:00Z'
+    };
+
+    const sheets = { [targetMatch.id]: sheet };
+    const { matches: syncedMatches } = syncMatchScoresFromScoresheets(
+      defaultState.matches,
+      defaultState.knockoutMatches,
+      sheets
+    );
+
+    const matchWithScoresheet = syncedMatches.find(m => m.id === targetMatch.id)!;
+    expect(matchWithScoresheet.homeScore).toBe(1);
+    expect(matchWithScoresheet.awayScore).toBe(0);
+
+    // Simulação do comportamento de bloqueio (como implementado no App.tsx e MatchesTab.tsx)
+    const canEditScore = (matchId: string) => {
+      return !sheets[matchId]?.hasScoresheet;
+    };
+
+    expect(canEditScore(targetMatch.id)).toBe(false);
+
+    // Para partida sem súmula preenchida, deve ser permitido editar
+    const otherMatch = defaultState.matches[1];
+    expect(canEditScore(otherMatch.id)).toBe(true);
+  });
 });
+

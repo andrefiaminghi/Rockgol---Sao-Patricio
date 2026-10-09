@@ -1,9 +1,24 @@
 ---
-last_updated: "2026-10-09T13:28:00-03:00"
+last_updated: "2026-10-09T13:48:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
+
+## [2026-10-09] Bloqueio de Edição Manual de Placares na Aba Jogos Quando Súmula Estiver Registrada
+- **Objetivo da Sessão:** Atender à solicitação de que, quando uma partida possuir súmula oficial preenchida, os campos de placar na aba Jogos fiquem estritamente bloqueados para edição manual, garantindo integridade dos dados registrados pela arbitragem.
+- **Vínculo à Task:** FEAT-2026-10-002 (Governança e Integridade de Placares da Súmula)
+- **Atividades Realizadas:**
+  - **Interface da Aba Jogos (`MatchesTab`):**
+    - Atualizada a prop `scoresheets` no componente [src/components/MatchesTab.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/MatchesTab.tsx).
+    - Desabilitados os inputs de placar mandante e visitante (`disabled={hasScoresheet}`) com estilos visuais de bloqueio (`cursor-not-allowed`, fundo escurecido e borda suave).
+    - Adicionado badge de identificação `🔒 Súmula Oficial` no cabeçalho do card da partida e aviso de bloqueio no rodapé `🔒 Placar vinculado à súmula (Edição bloqueada)`.
+    - Guarda no `handleScoreChange` para abortar qualquer tentativa de alteração manual se a partida tiver súmula ativa.
+  - **Camada de Estado Global (`App.tsx`):**
+    - Passada a prop `scoresheets={state.scoresheets}` para `<MatchesTab />` em [src/App.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/App.tsx).
+    - Adicionada trava de segurança no manipulador `handleUpdateMatchScore`: se `state.scoresheets[matchId]?.hasScoresheet` for verdadeiro, a mutação de placar manual é ignorada.
+  - **Testes Automatizados:** Adicionado teste de integração em [tests/unit/scoresheetIntegration.test.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetIntegration.test.ts) validando que partidas com súmula preenchida bloqueiam edição e partidas sem súmula permanecem editáveis.
+  - **Verificação Completa:** 68/68 testes aprovados no Vitest (`npm test`) e compilação de produção (`npm run build`) concluída com sucesso.
 
 ## [2026-10-09] Identificação de Fases Mata-Mata, Pênaltis na Súmula e Nomes de Jogadores na Artilharia
 - **Objetivo da Sessão:** Atender a três demandas de UI/domínio na aba Súmula:

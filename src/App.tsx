@@ -80,6 +80,11 @@ export function App() {
     awayScore: number | null
   ) => {
     setState(prev => {
+      // Bloqueia edição manual se houver súmula oficial registrada
+      if (prev.scoresheets?.[matchId]?.hasScoresheet) {
+        return prev;
+      }
+
       const updatedMatches = prev.matches.map(m => {
         if (m.id !== matchId) return m;
         const status = homeScore !== null && awayScore !== null ? 'FINISHED' : 'PENDING';
@@ -210,6 +215,7 @@ export function App() {
           <MatchesTab
             matches={state.matches}
             teams={state.teams}
+            scoresheets={state.scoresheets}
             onUpdateScore={handleUpdateMatchScore}
           />
         )}
