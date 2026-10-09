@@ -47,10 +47,57 @@ export interface TeamStanding {
   goalDifference: number;
 }
 
+export interface GoalEvent {
+  id: string;
+  teamId: string;
+  playerIndex: number | null; // 0 a 9 conforme slots do elenco em Team.players, ou null para gol contra
+  playerName: string;         // Ex: "Pedro" ou "Jogador 7" / "Gol Contra"
+  isOwnGoal?: boolean;
+}
+
+export type CardType = 'YELLOW' | 'RED';
+
+export interface CardEvent {
+  id: string;
+  teamId: string;
+  playerIndex: number;        // 0 a 9 conforme slots do elenco em Team.players
+  playerName: string;
+  cardType: CardType;
+}
+
+export interface MatchScoresheet {
+  matchId: string;            // ID correspondente em matches ou knockoutMatches
+  hasScoresheet: boolean;     // Flag determinística indicando se a súmula está ativa/preenchida
+  goals: GoalEvent[];
+  cards: CardEvent[];
+  observations: string;       // Observações livres da arbitragem
+  updatedAt: string;
+}
+
+export interface PlayerSuspension {
+  teamId: string;
+  teamName: string;
+  playerIndex: number;
+  playerName: string;
+  suspendedForRoundNumber: number; // Rodada em que o jogador deve cumprir suspensão
+  reason: 'RED_CARD' | 'DOUBLE_YELLOW' | 'ACCUMULATED_YELLOWS';
+  originMatchId: string;
+}
+
+export interface TopScorer {
+  teamId: string;
+  teamName: string;
+  playerIndex: number | null;
+  playerName: string;
+  goals: number;
+}
+
 export interface TournamentState {
   teams: Team[];
   matches: Match[];
   knockoutMatches: KnockoutMatch[];
+  scoresheets: Record<string, MatchScoresheet>;
   version: number;
   lastUpdated: string;
 }
+

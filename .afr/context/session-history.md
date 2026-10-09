@@ -1,9 +1,56 @@
 ---
-last_updated: "2026-10-09T08:00:00-03:00"
+last_updated: "2026-10-09T11:28:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
+
+## [2026-10-09] Formalização da Tríade Canônica AFR: Spec, Plano e Tarefas Atômicas da Súmula
+- **Objetivo da Sessão:** Cumprir o fluxo da esteira AFR após a aprovação do design pelo usuário, formalizando a especificação da feature, o plano técnico de implementação e a decomposição em 6 tarefas atômicas para execução disciplinada via TDD.
+- **Vínculo à Task:** FEAT-2026-10-002, Plano `plan-2026-10-09-002`, Tasks `task-001` a `task-006`.
+- **Atividades Realizadas:**
+  - Criação da especificação formal [.afr/features/controle-sumula-juizes.md](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/.afr/features/controle-sumula-juizes.md) com User Story, contratos de dados em código TypeScript, 5 invariantes numeradas (`INV-01` a `INV-05`), 5 critérios BDD estritos (`AC-001` a `AC-005`), casos negativos e exclusões de escopo.
+  - Criação do plano de implementação detalhado [.afr/plans/plan-2026-10-09-002.md](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/.afr/plans/plan-2026-10-09-002.md) com granularidade de passos RED, GREEN e Commits frequentes.
+  - Decomposição em 6 tarefas atômicas estritas em `.afr/tasks/`:
+    - `task-001`: Modelos de Domínio, Tipagem e Retrocompatibilidade de Storage
+    - `task-002`: Serviço de Súmula, Sincronização e Regras de Suspensão (`scoresheetService.ts`)
+    - `task-003`: Integração dos Handlers Reativos no Estado Global (`App.tsx`)
+    - `task-004`: Componente Modal de Preenchimento da Súmula (`ScoresheetModal.tsx`)
+    - `task-005`: Nova Aba "Súmula" e Integração na Barra de Navegação (`ScoresheetTab.tsx` e `Navigation.tsx`)
+    - `task-006`: Exportação Modular WhatsApp e Relatório em PDF Consolidado (`pdfExportService.ts` e `ExportTab.tsx`)
+  - Atualização do ponteiro [.afr/current_task](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/.afr/current_task) apontando para a `task-001`.
+- **Decisões Tomadas:**
+  - Garantir isolamento em cada tarefa com Allowlist estrita de leitura e escrita.
+- **Próximos Passos:**
+  - Iniciar a execução da Task 1 pelo ciclo TDD (escrever teste que falha em `tests/unit/scoresheetTypes.test.ts`, implementar código mínimo e validar).
+
+## [2026-10-09] Brainstorming e Refinamento de Requisitos: Controle de Súmula para Juízes
+- **Objetivo da Sessão:** Conduzir o brainstorming formal da skill `afr-superpowers:brainstorming` para definir escopo, contratos e fluxos da súmula de arbitragem dos juízes.
+- **Vínculo à Task:** FEAT-2026-10-002 (Controle de Súmula para Juízes - Brainstorming)
+- **Atividades Realizadas:**
+  - Análise dos requisitos definidos pelo usuário: registro de autores de gols (artilharia) e cartões baseados nos atletas da aba Times (por número ou número + nome), horários oficiais das partidas mantidos, observações livres da arbitragem sem necessidade de aprovação formal, criação de aba dedicada "Súmula" no aplicativo e inclusão dos dados no relatório PDF e mensagem de WhatsApp com seleção de destino.
+  - Definição das regras de negócio pelo usuário:
+    - **Regra de Cartões:** 2 cartões amarelos acumulados em jogos distintos geram suspensão de 1 partida; cartão vermelho direto ou 2 amarelos no mesmo jogo geram suspensão automática de 1 partida.
+    - **Sincronização Condicional de Placares:** Se a súmula da partida for preenchida, o placar na aba Jogos é alimentado automaticamente pelos gols da súmula; se não houver súmula registrada, o placar manual na aba Jogos permanece livremente editável.
+    - **Exportação & Compartilhamento:** Compartilhamento WhatsApp modular com 3 formatos (Artilharia & Cartões, Classificação & Mata-Mata, e Suspensão por Rodadas); PDF consolidado contendo relatório completo (Classificação, Mata-Mata, Artilharia, Cartões, Suspensões e Súmulas).
+  - Estruturação do Design Técnico de Dados, Componentes e Fluxos para validação.
+- **Decisões Tomadas:**
+  - Adoção da Abordagem 1 customizada com sincronização condicional e suspensão com acúmulo de 2 amarelos.
+- **Próximos Passos:**
+  - Apresentar o design estruturado para aprovação do usuário e, após aprovado, formalizar a especificação de feature em `.afr/features/` via `afr-planning:feature-spec-generator`.
+
+## [2026-10-09] Inicialização da Branch de Trabalho e Preferências Git para Controle de Súmula dos Juízes
+- **Objetivo da Sessão:** Atender ao comando de abertura de sessão da pipeline AFR (`/using-afr-superpowers`), executar o checklist `session-start.md`, validar a sanidade do projeto (testes e build limpos), inicializar o arquivo de preferências git canônico `.afr/git-preferences.md` e criar a branch de trabalho dedicada `feat/controle-sumula-juizes` para inclusão do controle de súmula para os juízes.
+- **Vínculo à Task:** FEAT-2026-10-002 (Controle de Súmula para Juízes - Preparação & Branch)
+- **Atividades Realizadas:**
+  - Verificação de git status e sincronização da branch `main` com o remoto (`origin/main`).
+  - Execução da suíte completa de testes automatizados com Vitest (41/41 testes aprovados com sucesso).
+  - Configuração do arquivo canônico `.afr/git-preferences.md` com convenções AFR (Conventional Commits em pt-BR, branch base/destino `main`, autor André Ribeiro).
+  - Criação e ativação da nova branch de trabalho `feat/controle-sumula-juizes`.
+- **Decisões Tomadas:**
+  - Adotar a nomenclatura canônica `feat/controle-sumula-juizes` alinhada aos padrões AFR (`feat/<nome-curto>`).
+- **Próximos Passos:**
+  - Iniciar a fase de Brainstorming e especificação Feature First em `.afr/features/` para detalhar os requisitos da súmula de arbitragem (cartões amarelo/vermelho, autores dos gols por atleta, tempos de jogo, observações e eventual impacto na artilharia e classificação).
 
 ## [2026-10-09] Estruturação PWA iOS 100% Offline e Pipeline GitHub Pages (HTTPS Gratuito)
 - **Objetivo da Sessão:** Estruturar a página web para operação perfeita no iOS (iPhone / Safari) como PWA adicionado à Tela de Início em modo standalone (tela cheia sem barras), mantendo proposta 100% offline com persistência local direta no aparelho (`localStorage`), suporte a Web Share API para exportar backup e workflow de deploy automático contínuo via GitHub Actions no GitHub Pages com HTTPS seguro e custo zero.
