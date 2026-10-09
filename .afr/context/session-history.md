@@ -1,9 +1,30 @@
 ---
-last_updated: "2026-10-08T20:00:00-03:00"
+last_updated: "2026-10-09T08:00:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
+
+## [2026-10-09] Estruturação PWA iOS 100% Offline e Pipeline GitHub Pages (HTTPS Gratuito)
+- **Objetivo da Sessão:** Estruturar a página web para operação perfeita no iOS (iPhone / Safari) como PWA adicionado à Tela de Início em modo standalone (tela cheia sem barras), mantendo proposta 100% offline com persistência local direta no aparelho (`localStorage`), suporte a Web Share API para exportar backup e workflow de deploy automático contínuo via GitHub Actions no GitHub Pages com HTTPS seguro e custo zero.
+- **Vínculo à Task:** FEAT-2026-10-001 (PWA iOS Offline & GitHub Pages Deploy), Plano `plan-2026-10-09-001` (Tasks 001 a 004).
+- **Atividades Realizadas:**
+  - Configuração de `base: './'` no [vite.config.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/vite.config.ts) para resolução relativa universal de bundles e assets no subdiretório do GitHub Pages (`/Rockgol---Sao-Patricio/`).
+  - Adição de metatags completas de PWA para Apple no [index.html](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/index.html) (`apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, `apple-mobile-web-app-title`, `apple-touch-icon` e `viewport-fit=cover`).
+  - Configuração de safe area insets (`pt-safe`) no [Header.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/Header.tsx) para acomodar o entalhe/Dynamic Island e barra de status do iPhone.
+  - Atualização do [manifest.json](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/public/manifest.json) com `start_url: "./"`, `scope: "./"` e ícones relativos.
+  - Evolução do Service Worker [public/sw.js](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/public/sw.js) com precache relativo e estratégia de cache dinâmico de recursos estáticos compilados (JS, CSS, fontes e imagens) com fallback offline para navegação.
+  - Ajuste de registro do Service Worker no [main.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/main.tsx) apontando para `./sw.js`.
+  - Aprimoramento do [backupService.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/services/backupService.ts) com suporte à Web Share API (`navigator.share`) com arquivo JSON para salvamento direto no app "Arquivos" do iPhone / WhatsApp / AirDrop.
+  - Criação do componente [IOSInstallBanner.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/IOSInstallBanner.tsx) e integração no [App.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/App.tsx), apresentando guia passo a passo para o usuário adicionar à Tela de Início do Safari.
+  - Criação do workflow [.github/workflows/deploy.yml](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/.github/workflows/deploy.yml) para automação de CI/CD no GitHub Pages.
+  - Expansão dos testes unitários em [tests/unit/pwaSetup.test.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/pwaSetup.test.ts) (41/41 testes verdes).
+  - Build de produção verificado com sucesso (`npm run build`).
+- **Decisões Tomadas:**
+  - Adotar `base: './'` para manter o pacote universal (compatível tanto com GitHub Pages com subpath quanto com domínio customizado ou visualização local).
+  - Utilizar a Web Share API como primeira opção móvel para salvar arquivos no iOS, permitindo acesso imediato ao app nativo "Arquivos" sem depender da API desktop não suportada pelo Safari.
+- **Próximos Passos:**
+  - Orientar o usuário a habilitar o GitHub Pages no repositório (`Settings > Pages > Source: GitHub Actions`) e realizar o push para a branch `main` para publicação automática no link seguro HTTPS.
 
 ## [2026-10-08] Detalhamento de Pênaltis no Mata-Mata e Destaque da Grande Final / Pódio no WhatsApp
 - **Objetivo da Sessão:** Aprimorar o texto gerado para compartilhamento no WhatsApp para exibir explicitamente o resultado e vencedor das disputas de pênaltis em empates do mata-mata, além de dar destaque visual de honra à Grande Final (Campeão/Vice) e à disputa de 3º e 4º colocados.

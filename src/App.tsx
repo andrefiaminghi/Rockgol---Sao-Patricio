@@ -19,6 +19,7 @@ import { TeamsTab } from './components/TeamsTab';
 import { StandingsTab } from './components/StandingsTab';
 import { KnockoutTab } from './components/KnockoutTab';
 import { ExportTab } from './components/ExportTab';
+import { IOSInstallBanner } from './components/IOSInstallBanner';
 
 export function App() {
   const [state, setState] = useState<TournamentState>(() => loadTournamentState());
@@ -155,6 +156,8 @@ export function App() {
         onQuickSave={() => setActiveTab('export')}
         onResetPrompt={handleResetState}
       />
+
+      <IOSInstallBanner />
 
       <main className="flex-1 w-full px-3.5 pt-3.5 pb-24">
         {activeTab === 'matches' && (

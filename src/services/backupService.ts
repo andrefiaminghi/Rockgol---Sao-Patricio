@@ -69,7 +69,30 @@ export async function saveTournamentBackupFile(state: TournamentState): Promise<
     }
   }
 
-  // 3. Fallback Web clássico via link de download
+  // 3. Suporte móvel / iOS Web Share API (Salvar em Arquivos / WhatsApp / AirDrop)
+  if (typeof navigator !== 'undefined' && typeof navigator.share === 'function' && typeof File !== 'undefined') {
+    try {
+      const file = new File([json], fileName, { type: 'application/json' });
+      if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: 'Backup RockGol 2026',
+          text: 'Backup do Torneio RockGol São Patrício Bar 2026',
+          files: [file]
+        });
+        return {
+          success: true,
+          message: 'Backup compartilhado com sucesso! Você pode salvá-lo no app Arquivos ou enviar pelo aplicativo desejado.'
+        };
+      }
+    } catch (err: any) {
+      if (err.name === 'AbortError' || (err.message && (err.message.includes('abort') || err.message.includes('canceled')))) {
+        return { success: true, message: 'Compartilhamento cancelado pelo usuário.' };
+      }
+      console.warn('Falha no Web Share API, recorrendo ao download padrão:', err);
+    }
+  }
+
+  // 4. Fallback Web clássico via link de download
   try {
     if (typeof document === 'undefined' || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
       return {
