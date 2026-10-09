@@ -1,11 +1,39 @@
 ---
-last_updated: "2026-10-09T15:03:00-03:00"
+last_updated: "2026-10-09T15:37:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
 
-## [2026-10-09] Brainstorming e Especificação Técnica: Sincronismo Supabase e PWAs Independentes
+## [2026-10-09] Execução TDD: Sincronismo Supabase e PWAs Independentes (Juiz e Torcida)
+- **Objetivo da Sessão:** Executar integralmente o plano `plan-2026-10-09-003` (Tasks 001 a 005) com metodologia estrita TDD, integrando a persistência na nuvem com o Supabase e separando a aplicação em dois PWAs no mesmo repositório: PWA Juiz (`juiz.html`) e PWA Torcida (`index.html`).
+- **Vínculo à Task:** FEAT-2026-10-003 (Sincronismo Supabase e PWAs Independentes)
+- **Tasks Executadas e Commits:**
+  1. **Task 001 (`9391226`):** `feat(sync): implementar servico de sincronizacao com supabase e fallback offline`
+     - Instalado `@supabase/supabase-js`.
+     - Implementado [`src/services/supabaseService.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/services/supabaseService.ts) com client Supabase oficial (`ihegprwkrmybdrpgodnf`), métodos `pushScoresheetToSupabase`, `deleteScoresheetFromSupabase`, `pushTeamToSupabase` e `pullTournamentFromSupabase`.
+     - Criada migration SQL PostgreSQL em [`supabase/migrations/20261009180000_create_rockgol_sync_tables.sql`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/supabase/migrations/20261009180000_create_rockgol_sync_tables.sql).
+     - Testes unitários em [`tests/unit/supabaseService.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/supabaseService.test.ts).
+  2. **Task 002 (`c145739`):** `feat(pwa): configurar suporte multi-page para app torcida e app arbitro`
+     - Configurado Vite multi-page em [`vite.config.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/vite.config.ts) com entrypoints `index.html` e `juiz.html`.
+     - Criados [`public/manifest-juiz.json`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/public/manifest-juiz.json), [`juiz.html`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/juiz.html) e [`src/juiz.tsx`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/juiz.tsx).
+     - Service Worker [`public/sw.js`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/public/sw.js) atualizado com precache de `juiz.html` e `manifest-juiz.json`.
+     - Testes em [`tests/unit/pwaSetup.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/pwaSetup.test.ts).
+  3. **Task 003 (`2116be2`):** `feat(auth): implementar tela de desbloqueio por pin para arbitragem`
+     - Implementado [`src/components/JudgeAuthLock.tsx`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/JudgeAuthLock.tsx) com teclado touch numérico, validação do PIN padrão `2026` e persistência no `localStorage`.
+     - Guarda de autenticação integrada em [`src/App.tsx`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/App.tsx).
+     - Testes em [`tests/unit/judgeAuth.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/judgeAuth.test.ts).
+  4. **Task 004 (`76de9e3`):** `feat(permissions): aplicar restricoes de somente leitura para torcida e edicao para juizes`
+     - Modo Torcida: `readOnly={true}` propagado para `<TeamsTab />` e `<ScoresheetTab />`, bloqueando edição de nomes e ocultando botões de preenchimento, edição e limpeza de súmula.
+     - Modo Juiz: edição de elencos e preenchimento de súmula liberados com push assíncrono para o Supabase.
+     - Testes em [`tests/unit/rolePermissions.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/rolePermissions.test.ts).
+  5. **Task 005 (`5d55e4e`):** `feat(header): adicionar botao de sincronizacao supabase e indicador de status de nuvem`
+     - Atualizado [`src/components/Header.tsx`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/Header.tsx): Torcida recebe botão "Sincronizar" (sem botão Reiniciar); Juiz recebe indicador de status online/offline da nuvem e botão "Sincronizar".
+     - Integrado `pullTournamentFromSupabase` em [`src/App.tsx`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/App.tsx) com mesclagem inteligente de súmulas, recálculo de classificação e toast feedback visual.
+     - Testes em [`tests/unit/headerSync.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/headerSync.test.ts).
+- **Evidências Finais:**
+  - 90/90 testes unitários e de integração aprovados no Vitest (`npm test`).
+  - Build de produção gerado com sucesso pelo Vite (`dist/index.html` e `dist/juiz.html`).
 - **Objetivo da Sessão:** Atender à solicitação de brainstorming e avaliação da demanda documentada em `.afr/context/sinc.md`, gerando a branch de trabalho e a especificação técnica formal para integração com o Supabase e criação de dois PWAs independentes (Juiz e Torcida).
 - **Vínculo à Task:** FEAT-2026-10-003 (Sincronismo Supabase e PWAs Independentes)
 - **Atividades Realizadas:**
