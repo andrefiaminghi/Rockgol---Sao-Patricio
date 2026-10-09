@@ -71,6 +71,8 @@ export interface MatchScoresheet {
   goals: GoalEvent[];
   cards: CardEvent[];
   observations: string;       // Observações livres da arbitragem
+  homePenalties?: number | null;
+  awayPenalties?: number | null;
   updatedAt: string;
 }
 

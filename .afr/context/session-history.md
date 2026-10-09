@@ -1,9 +1,26 @@
 ---
-last_updated: "2026-10-09T12:05:00-03:00"
+last_updated: "2026-10-09T13:17:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
+
+## [2026-10-09] Correção da Propagação de Semifinais da Súmula para Grande Final e 3º Lugar
+- **Objetivo da Sessão:** Corrigir a falha em que o preenchimento da súmula das semifinais (`sf1` e `sf2`) não estava alimentando os times vencedores na Grande Final (`final`) e perdedores na Disputa de 3º Lugar (`third_place`).
+- **Vínculo à Task:** FEAT-2026-10-002 (Integração e Propagação de Mata-Mata da Súmula)
+- **Causa Raiz Identificada:**
+  - `syncMatchScoresFromScoresheets` apenas atribuía `homeScore` e `awayScore` nas partidas eliminatórias, mas deixava `winnerTeamId` e `loserTeamId` indefinidos e o status como `PENDING`.
+  - Como `updateFinalsFromSemifinals` exige `sf.status === 'FINISHED' && sf.winnerTeamId && sf.loserTeamId`, os confrontos da final e do 3º lugar nunca recebiam os times classificados.
+  - Além disso, partidas eliminatórias terminadas em empate no tempo normal não possuíam campos nem validação de disputa de pênaltis na interface da súmula.
+- **Atividades Realizadas:**
+  - **TDD / Teste de Regressão:** Adicionados testes em [tests/unit/scoresheetIntegration.test.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetIntegration.test.ts) validando a propagação automática de vencedores/perdedores das semifinais para final e 3º lugar, além de teste cobrindo desempate por cobrança de pênaltis na súmula.
+  - **Serviço de Sincronização:** Atualizado [src/services/scoresheetService.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/services/scoresheetService.ts) para invocar `resolveKnockoutMatch` nas partidas com súmula ativa (definindo `winnerTeamId`, `loserTeamId`, `status: 'FINISHED'`) e chamar `updateFinalsFromSemifinals` centralizadamente ao final do fluxo.
+  - **Interface do Modal:** Em [src/components/ScoresheetModal.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/ScoresheetModal.tsx), adicionada seção interativa de cobrança de pênaltis para jogos de mata-mata empatados no tempo normal, com validações obrigatórias para impedir empates nas penalidades.
+  - **Desfazer / Limpeza de Súmula:** Ajustado `handleDeleteScoresheet` em [src/App.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/App.tsx) para redefinir a partida para pendente e re-sincronizar as finais sem quebrar o chaveamento.
+  - **Verificações:** 64/64 testes unitários e de integração aprovados no Vitest; compilação de produção (`npm run build`) validada sem erros.
+- **Decisões Tomadas:**
+  - Centralizar a chamada de `updateFinalsFromSemifinals` diretamente no retorno de `syncMatchScoresFromScoresheets` para garantir consistência automática tanto ao salvar quanto ao deletar ou sincronizar súmulas.
+  - Adicionar suporte completo a pênaltis nas súmulas eliminatórias (`homePenalties`, `awayPenalties`).
 
 ## [2026-10-09] Ajuste de Usabilidade Mobile: Distribuição das Rodadas da Súmula em Grade de 2 Linhas
 - **Objetivo da Sessão:** Atender à solicitação de usabilidade do usuário para eliminar a necessidade de rolagem horizontal na seleção de rodadas na aba "Súmula", organizando os 12 seletores em duas linhas visíveis simultaneamente.

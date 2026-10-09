@@ -149,20 +149,10 @@ export function App() {
         updatedSheets
       );
 
-      let finalKnockout = knockoutMatches;
-      const targetKnockout = finalKnockout.find(m => m.id === sheet.matchId);
-      if (
-        targetKnockout &&
-        (targetKnockout.id === 'sf1' || targetKnockout.id === 'sf2') &&
-        targetKnockout.status === 'FINISHED'
-      ) {
-        finalKnockout = updateFinalsFromSemifinals(finalKnockout);
-      }
-
       const updatedState: TournamentState = {
         ...prev,
         matches,
-        knockoutMatches: finalKnockout,
+        knockoutMatches,
         scoresheets: updatedSheets,
         lastUpdated: new Date().toISOString()
       };
@@ -176,8 +166,35 @@ export function App() {
     setState(prev => {
       const updatedSheets = { ...prev.scoresheets };
       delete updatedSheets[matchId];
+
+      const updatedMatches = prev.matches.map(m =>
+        m.id === matchId ? { ...m, homeScore: null, awayScore: null, status: 'PENDING' as const } : m
+      );
+      const updatedKnockout = prev.knockoutMatches.map(m =>
+        m.id === matchId
+          ? {
+              ...m,
+              homeScore: null,
+              awayScore: null,
+              homePenalties: null,
+              awayPenalties: null,
+              winnerTeamId: null,
+              loserTeamId: null,
+              status: 'PENDING' as const
+            }
+          : m
+      );
+
+      const { matches, knockoutMatches } = syncMatchScoresFromScoresheets(
+        updatedMatches,
+        updatedKnockout,
+        updatedSheets
+      );
+
       const updatedState: TournamentState = {
         ...prev,
+        matches,
+        knockoutMatches,
         scoresheets: updatedSheets,
         lastUpdated: new Date().toISOString()
       };

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { syncMatchScoresFromScoresheets } from '../../src/services/scoresheetService';
 import { calculateStandings } from '../../src/services/standingsService';
-import { MatchScoresheet, TournamentState } from '../../src/types/tournament';
+import { MatchScoresheet, TournamentState, KnockoutMatch } from '../../src/types/tournament';
 import { createDefaultTournamentState } from '../../src/services/storageService';
 
 describe('Integração de Súmula e Estado Global', () => {
@@ -70,5 +70,190 @@ describe('Integração de Súmula e Estado Global', () => {
     // Remoção da súmula
     delete sheets[targetMatch.id];
     expect(sheets[targetMatch.id]).toBeUndefined();
+  });
+
+  it('deve alimentar os times da final e disputa de 3º lugar ao registrar súmula das semifinais', () => {
+    const initialKnockout = defaultState.knockoutMatches.map(m => {
+      if (m.id === 'sf1') return { ...m, homeTeamId: 'team_1', awayTeamId: 'team_4' };
+      if (m.id === 'sf2') return { ...m, homeTeamId: 'team_2', awayTeamId: 'team_3' };
+      return m;
+    });
+
+    // Súmula da SF1: team_1 vence team_4 por 2 x 0
+    const sheetSf1: MatchScoresheet = {
+      matchId: 'sf1',
+      hasScoresheet: true,
+      goals: [
+        { id: 'g1', teamId: 'team_1', playerIndex: 0, playerName: 'Atleta 1' },
+        { id: 'g2', teamId: 'team_1', playerIndex: 1, playerName: 'Atleta 2' }
+      ],
+      cards: [],
+      observations: '',
+      updatedAt: new Date().toISOString()
+    };
+
+    // Súmula da SF2: team_2 vence team_3 por 3 x 1
+    const sheetSf2: MatchScoresheet = {
+      matchId: 'sf2',
+      hasScoresheet: true,
+      goals: [
+        { id: 'g3', teamId: 'team_2', playerIndex: 0, playerName: 'Atleta 3' },
+        { id: 'g4', teamId: 'team_2', playerIndex: 1, playerName: 'Atleta 4' },
+        { id: 'g5', teamId: 'team_2', playerIndex: 2, playerName: 'Atleta 5' },
+        { id: 'g6', teamId: 'team_3', playerIndex: 0, playerName: 'Atleta 6' }
+      ],
+      cards: [],
+      observations: '',
+      updatedAt: new Date().toISOString()
+    };
+
+    const sheets = { sf1: sheetSf1, sf2: sheetSf2 };
+    const { knockoutMatches } = syncMatchScoresFromScoresheets(
+      defaultState.matches,
+      initialKnockout,
+      sheets
+    );
+
+    const updatedSf1 = knockoutMatches.find(m => m.id === 'sf1')!;
+    const updatedSf2 = knockoutMatches.find(m => m.id === 'sf2')!;
+    const finalMatch = knockoutMatches.find(m => m.id === 'final')!;
+    const thirdPlaceMatch = knockoutMatches.find(m => m.id === 'third_place')!;
+
+    expect(updatedSf1.status).toBe('FINISHED');
+    expect(updatedSf1.winnerTeamId).toBe('team_1');
+    expect(updatedSf1.loserTeamId).toBe('team_4');
+
+    expect(updatedSf2.status).toBe('FINISHED');
+    expect(updatedSf2.winnerTeamId).toBe('team_2');
+    expect(updatedSf2.loserTeamId).toBe('team_3');
+
+    // Final deve ter os vencedores de SF1 e SF2
+    expect(finalMatch.homeTeamId).toBe('team_1');
+    expect(finalMatch.awayTeamId).toBe('team_2');
+
+    // 3º Lugar deve ter os perdedores de SF1 e SF2
+    expect(thirdPlaceMatch.homeTeamId).toBe('team_4');
+    expect(thirdPlaceMatch.awayTeamId).toBe('team_3');
+  });
+
+  it('deve resolver semifinal empatada com cobrança de pênaltis informada na súmula', () => {
+    const initialKnockout: KnockoutMatch[] = [
+      {
+        id: 'sf1',
+        title: 'Semifinal 1',
+        homeTeamId: 'team_1',
+        awayTeamId: 'team_4',
+        field: 'Campo 1',
+        time: '14:00',
+        homeScore: null,
+        awayScore: null,
+        homePenalties: null,
+        awayPenalties: null,
+        winnerTeamId: null,
+        loserTeamId: null,
+        status: 'PENDING'
+      },
+      {
+        id: 'sf2',
+        title: 'Semifinal 2',
+        homeTeamId: 'team_2',
+        awayTeamId: 'team_3',
+        field: 'Campo 2',
+        time: '14:00',
+        homeScore: null,
+        awayScore: null,
+        homePenalties: null,
+        awayPenalties: null,
+        winnerTeamId: null,
+        loserTeamId: null,
+        status: 'PENDING'
+      },
+      {
+        id: 'third_place',
+        title: 'Disputa 3º Lugar',
+        homeTeamId: null,
+        awayTeamId: null,
+        field: 'Campo 2',
+        time: '16:00',
+        homeScore: null,
+        awayScore: null,
+        homePenalties: null,
+        awayPenalties: null,
+        winnerTeamId: null,
+        loserTeamId: null,
+        status: 'PENDING'
+      },
+      {
+        id: 'final',
+        title: 'Grande Final',
+        homeTeamId: null,
+        awayTeamId: null,
+        field: 'Campo 1',
+        time: '16:00',
+        homeScore: null,
+        awayScore: null,
+        homePenalties: null,
+        awayPenalties: null,
+        winnerTeamId: null,
+        loserTeamId: null,
+        status: 'PENDING'
+      }
+    ];
+
+    // SF1 empatou em 2x2, mas team_4 venceu nos pênaltis 3x2
+    const sheetSf1: MatchScoresheet = {
+      matchId: 'sf1',
+      hasScoresheet: true,
+      goals: [
+        { id: 'g1', teamId: 'team_1', playerIndex: 0, playerName: '#1 A', isOwnGoal: false },
+        { id: 'g2', teamId: 'team_1', playerIndex: 1, playerName: '#2 B', isOwnGoal: false },
+        { id: 'g3', teamId: 'team_4', playerIndex: 0, playerName: '#1 D', isOwnGoal: false },
+        { id: 'g4', teamId: 'team_4', playerIndex: 1, playerName: '#2 E', isOwnGoal: false }
+      ],
+      cards: [],
+      observations: 'Decidido nos penaltis',
+      homePenalties: 2,
+      awayPenalties: 3,
+      updatedAt: '2026-10-09T14:30:00Z'
+    };
+
+    // SF2: team_2 venceu no tempo normal 1x0
+    const sheetSf2: MatchScoresheet = {
+      matchId: 'sf2',
+      hasScoresheet: true,
+      goals: [
+        { id: 'g5', teamId: 'team_2', playerIndex: 0, playerName: '#1 C', isOwnGoal: false }
+      ],
+      cards: [],
+      observations: '',
+      updatedAt: '2026-10-09T14:30:00Z'
+    };
+
+    const sheets = { sf1: sheetSf1, sf2: sheetSf2 };
+    const { knockoutMatches } = syncMatchScoresFromScoresheets(
+      defaultState.matches,
+      initialKnockout,
+      sheets
+    );
+
+    const updatedSf1 = knockoutMatches.find(m => m.id === 'sf1')!;
+    const finalMatch = knockoutMatches.find(m => m.id === 'final')!;
+    const thirdPlaceMatch = knockoutMatches.find(m => m.id === 'third_place')!;
+
+    expect(updatedSf1.status).toBe('FINISHED');
+    expect(updatedSf1.homeScore).toBe(2);
+    expect(updatedSf1.awayScore).toBe(2);
+    expect(updatedSf1.homePenalties).toBe(2);
+    expect(updatedSf1.awayPenalties).toBe(3);
+    expect(updatedSf1.winnerTeamId).toBe('team_4');
+    expect(updatedSf1.loserTeamId).toBe('team_1');
+
+    // Final deve ter team_4 (vencedor nos pênaltis de SF1) e team_2 (vencedor de SF2)
+    expect(finalMatch.homeTeamId).toBe('team_4');
+    expect(finalMatch.awayTeamId).toBe('team_2');
+
+    // 3º lugar deve ter team_1 (perdedor nos pênaltis de SF1) e team_3 (perdedor de SF2)
+    expect(thirdPlaceMatch.homeTeamId).toBe('team_1');
+    expect(thirdPlaceMatch.awayTeamId).toBe('team_3');
   });
 });

@@ -30,6 +30,19 @@ export const ScoresheetModal: React.FC<ScoresheetModalProps> = ({
   const [cards, setCards] = useState<CardEvent[]>(currentScoresheet?.cards || []);
   const [observations, setObservations] = useState(currentScoresheet?.observations || '');
 
+  const isKnockout = !('roundNumber' in match);
+  const [homePenalties, setHomePenalties] = useState<string>(
+    currentScoresheet?.homePenalties !== undefined && currentScoresheet?.homePenalties !== null
+      ? String(currentScoresheet.homePenalties)
+      : ''
+  );
+  const [awayPenalties, setAwayPenalties] = useState<string>(
+    currentScoresheet?.awayPenalties !== undefined && currentScoresheet?.awayPenalties !== null
+      ? String(currentScoresheet.awayPenalties)
+      : ''
+  );
+  const [penaltyError, setPenaltyError] = useState<string | null>(null);
+
   // Modais internos de seleção
   const [selectedGoalTeamId, setSelectedGoalTeamId] = useState<string | null>(null);
   const [selectedCardTeamId, setSelectedCardTeamId] = useState<string | null>(null);
@@ -87,12 +100,31 @@ export const ScoresheetModal: React.FC<ScoresheetModalProps> = ({
   };
 
   const handleSave = () => {
+    if (isKnockout && homeGoalsCount === awayGoalsCount) {
+      if (homePenalties === '' || awayPenalties === '') {
+        setPenaltyError('Partida eliminatória empatada necessita do placar de pênaltis.');
+        return;
+      }
+      const hp = Number(homePenalties);
+      const ap = Number(awayPenalties);
+      if (isNaN(hp) || isNaN(ap) || hp < 0 || ap < 0) {
+        setPenaltyError('Informe valores numéricos válidos para os pênaltis.');
+        return;
+      }
+      if (hp === ap) {
+        setPenaltyError('A disputa de pênaltis não pode terminar empatada.');
+        return;
+      }
+    }
+
     onSave({
       matchId: match.id,
       hasScoresheet: true,
       goals,
       cards,
       observations,
+      homePenalties: isKnockout && homeGoalsCount === awayGoalsCount ? Number(homePenalties) : null,
+      awayPenalties: isKnockout && homeGoalsCount === awayGoalsCount ? Number(awayPenalties) : null,
       updatedAt: new Date().toISOString()
     });
     onClose();
@@ -137,20 +169,82 @@ export const ScoresheetModal: React.FC<ScoresheetModalProps> = ({
         </div>
 
         {/* Placar ao Vivo da Súmula */}
-        <div className="bg-[#14181D] px-4 py-3 border-b border-[#2F343C] flex items-center justify-between">
-          <div className="text-center flex-1">
-            <span className="text-xs font-semibold text-[#8F99A8] block truncate">{homeTeam.name}</span>
-            <span className="text-2xl font-black text-white">{homeGoalsCount}</span>
+        <div className="bg-[#14181D] px-4 py-3 border-b border-[#2F343C]">
+          <div className="flex items-center justify-between">
+            <div className="text-center flex-1">
+              <span className="text-xs font-semibold text-[#8F99A8] block truncate">{homeTeam.name}</span>
+              <span className="text-2xl font-black text-white">{homeGoalsCount}</span>
+            </div>
+            <span className="text-xs font-bold text-[#8F99A8] uppercase px-3">×</span>
+            <div className="text-center flex-1">
+              <span className="text-xs font-semibold text-[#8F99A8] block truncate">{awayTeam.name}</span>
+              <span className="text-2xl font-black text-white">{awayGoalsCount}</span>
+            </div>
           </div>
-          <span className="text-xs font-bold text-[#8F99A8] uppercase px-3">×</span>
-          <div className="text-center flex-1">
-            <span className="text-xs font-semibold text-[#8F99A8] block truncate">{awayTeam.name}</span>
-            <span className="text-2xl font-black text-white">{awayGoalsCount}</span>
-          </div>
+          {isKnockout && homeGoalsCount === awayGoalsCount && homePenalties !== '' && awayPenalties !== '' && (
+            <div className="text-center text-xs font-bold text-[#00D26A] mt-1">
+              (Pênaltis: {homePenalties} × {awayPenalties})
+            </div>
+          )}
         </div>
 
         {/* Conteúdo Rolável */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          {/* Seção de Pênaltis para Mata-Mata Empatado */}
+          {isKnockout && homeGoalsCount === awayGoalsCount && (
+            <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
+                  ⚖️ Disputa de Pênaltis (Mata-mata)
+                </span>
+                <span className="text-[10px] text-amber-300 font-medium bg-amber-500/20 px-2 py-0.5 rounded">
+                  Obrigatório
+                </span>
+              </div>
+              <p className="text-[11px] text-[#8F99A8]">
+                O tempo normal terminou empatado. Informe os gols convertidos nas cobranças de pênaltis para definir o vencedor:
+              </p>
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="text-[11px] font-semibold text-white block mb-1 truncate">
+                    {homeTeam.name}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={homePenalties}
+                    onChange={e => {
+                      setHomePenalties(e.target.value);
+                      setPenaltyError(null);
+                    }}
+                    placeholder="Ex: 5"
+                    className="w-full bg-[#14181D] border border-[#2F343C] focus:border-amber-400 rounded-lg p-2 text-center text-sm font-bold text-white focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-white block mb-1 truncate">
+                    {awayTeam.name}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={awayPenalties}
+                    onChange={e => {
+                      setAwayPenalties(e.target.value);
+                      setPenaltyError(null);
+                    }}
+                    placeholder="Ex: 4"
+                    className="w-full bg-[#14181D] border border-[#2F343C] focus:border-amber-400 rounded-lg p-2 text-center text-sm font-bold text-white focus:outline-none"
+                  />
+                </div>
+              </div>
+              {penaltyError && (
+                <p className="text-[11px] text-red-400 font-bold mt-1">
+                  ⚠️ {penaltyError}
+                </p>
+              )}
+            </div>
+          )}
           {/* Seção de Gols */}
           <div>
             <div className="flex items-center justify-between mb-2.5">

@@ -1,4 +1,5 @@
 import { Match, KnockoutMatch, Team, MatchScoresheet, TopScorer, PlayerSuspension } from '../types/tournament';
+import { resolveKnockoutMatch, updateFinalsFromSemifinals } from './knockoutService';
 
 /**
  * Sincroniza condicionalmente os placares de partidas da fase de grupos e mata-mata
@@ -45,15 +46,35 @@ export function syncMatchScoresFromScoresheets(
       g => (g.teamId === match.awayTeamId && !g.isOwnGoal) || (g.teamId === match.homeTeamId && g.isOwnGoal)
     ).length;
 
+    const homePenalties = sheet.homePenalties ?? null;
+    const awayPenalties = sheet.awayPenalties ?? null;
+
+    if (match.homeTeamId && match.awayTeamId) {
+      const { updatedMatch, error } = resolveKnockoutMatch(
+        match,
+        homeGoals,
+        awayGoals,
+        homePenalties,
+        awayPenalties
+      );
+      if (!error) {
+        return updatedMatch;
+      }
+    }
+
     return {
       ...match,
       homeScore: homeGoals,
       awayScore: awayGoals,
-      status: (match.homeScore !== null && match.awayScore !== null) ? 'FINISHED' as const : match.status
+      homePenalties,
+      awayPenalties,
+      status: (homeGoals !== awayGoals && match.homeTeamId && match.awayTeamId) ? ('FINISHED' as const) : match.status
     };
   });
 
-  return { matches: updatedMatches, knockoutMatches: updatedKnockout };
+  const finalKnockout = updateFinalsFromSemifinals(updatedKnockout);
+
+  return { matches: updatedMatches, knockoutMatches: finalKnockout };
 }
 
 /**
