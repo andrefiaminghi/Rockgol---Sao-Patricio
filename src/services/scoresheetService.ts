@@ -1,49 +1,9 @@
----
-id: "plan-2026-10-09-002-task-002"
-plan_id: "plan-2026-10-09-002"
-feature_id: "FEAT-2026-10-002"
-sequence_order: 2
-status: "DONE"
-target_test_file: "tests/unit/scoresheetService.test.ts"
-target_src_file: "src/services/scoresheetService.ts"
----
-
-# Tarefa Técnica: plan-2026-10-09-002-task-002
-
-## 1. Contexto & Objetivo Atômico
-
-Criar o serviço puro de domínio `src/services/scoresheetService.ts` responsável por:
-1. Sincronizar condicionalmente os placares das partidas a partir das súmulas ativas (`hasScoresheet: true`), preservando placar manual quando a súmula estiver ausente ou desativada;
-2. Calcular a lista consolidada e ordenada de artilheiros (`getTopScorers`), ignorando gols contra;
-3. Calcular suspensões por equipe (`getSuspensions`), implementando a regra de 2 amarelos acumulados em rodadas diferentes, 2 amarelos no mesmo jogo e vermelho direto para a próxima rodada da equipe;
-4. Identificar se um atleta específico está suspenso para uma partida (`isPlayerSuspended`).
-
-## 2. Limites do Sistema de Arquivos (Allowlist)
-
-* **Permissão de Leitura:**
-  - `src/types/tournament.ts` — contratos de dados
-  - `src/data/initialData.ts` — dados de rodadas e confrontos
-
-* **Permissão de Escrita:**
-  - `tests/unit/scoresheetService.test.ts` **(NOVO)** — suíte de testes com Vitest
-  - `src/services/scoresheetService.ts` **(NOVO)** — serviço de domínio
-
-## 3. Contrato da Fase RED
-
-* **Comando de Teste:**
-  ```bash
-  npm test tests/unit/scoresheetService.test.ts
-  ```
-* **Resultado Esperado no Red:**
-  FAIL com erro de módulo inexistente `Cannot find module '../../src/services/scoresheetService'`.
-
-## 4. Implementação GREEN Esperada
-
-### 4.1 `src/services/scoresheetService.ts`
-
-```typescript
 import { Match, KnockoutMatch, Team, MatchScoresheet, TopScorer, PlayerSuspension } from '../types/tournament';
 
+/**
+ * Sincroniza condicionalmente os placares de partidas da fase de grupos e mata-mata
+ * apenas se houver uma súmula ativa (hasScoresheet: true). Caso contrário, preserva o placar manual.
+ */
 export function syncMatchScoresFromScoresheets(
   matches: Match[],
   knockoutMatches: KnockoutMatch[],
@@ -51,10 +11,17 @@ export function syncMatchScoresFromScoresheets(
 ): { matches: Match[]; knockoutMatches: KnockoutMatch[] } {
   const updatedMatches = matches.map(match => {
     const sheet = scoresheets[match.id];
-    if (!sheet || !sheet.hasScoresheet) return match;
+    if (!sheet || !sheet.hasScoresheet) {
+      return match;
+    }
 
-    const homeGoals = sheet.goals.filter(g => (g.teamId === match.homeTeamId && !g.isOwnGoal) || (g.teamId === match.awayTeamId && g.isOwnGoal)).length;
-    const awayGoals = sheet.goals.filter(g => (g.teamId === match.awayTeamId && !g.isOwnGoal) || (g.teamId === match.homeTeamId && g.isOwnGoal)).length;
+    const homeGoals = sheet.goals.filter(
+      g => (g.teamId === match.homeTeamId && !g.isOwnGoal) || (g.teamId === match.awayTeamId && g.isOwnGoal)
+    ).length;
+
+    const awayGoals = sheet.goals.filter(
+      g => (g.teamId === match.awayTeamId && !g.isOwnGoal) || (g.teamId === match.homeTeamId && g.isOwnGoal)
+    ).length;
 
     return {
       ...match,
@@ -66,10 +33,17 @@ export function syncMatchScoresFromScoresheets(
 
   const updatedKnockout = knockoutMatches.map(match => {
     const sheet = scoresheets[match.id];
-    if (!sheet || !sheet.hasScoresheet) return match;
+    if (!sheet || !sheet.hasScoresheet) {
+      return match;
+    }
 
-    const homeGoals = sheet.goals.filter(g => (g.teamId === match.homeTeamId && !g.isOwnGoal) || (g.teamId === match.awayTeamId && g.isOwnGoal)).length;
-    const awayGoals = sheet.goals.filter(g => (g.teamId === match.awayTeamId && !g.isOwnGoal) || (g.teamId === match.homeTeamId && g.isOwnGoal)).length;
+    const homeGoals = sheet.goals.filter(
+      g => (g.teamId === match.homeTeamId && !g.isOwnGoal) || (g.teamId === match.awayTeamId && g.isOwnGoal)
+    ).length;
+
+    const awayGoals = sheet.goals.filter(
+      g => (g.teamId === match.awayTeamId && !g.isOwnGoal) || (g.teamId === match.homeTeamId && g.isOwnGoal)
+    ).length;
 
     return {
       ...match,
@@ -82,6 +56,10 @@ export function syncMatchScoresFromScoresheets(
   return { matches: updatedMatches, knockoutMatches: updatedKnockout };
 }
 
+/**
+ * Calcula a lista oficial de artilheiros do torneio em ordem decrescente de gols.
+ * Gols contra são desconsiderados na artilharia individual.
+ */
 export function getTopScorers(
   teams: Team[],
   scoresheets: Record<string, MatchScoresheet>
@@ -89,9 +67,11 @@ export function getTopScorers(
   const scorersMap: Record<string, TopScorer> = {};
 
   Object.values(scoresheets).forEach(sheet => {
-    if (!sheet.hasScoresheet) return;
+    if (!sheet || !sheet.hasScoresheet) return;
+
     sheet.goals.forEach(goal => {
       if (goal.isOwnGoal || goal.playerIndex === null) return;
+
       const key = `${goal.teamId}-${goal.playerIndex}`;
       const team = teams.find(t => t.id === goal.teamId);
       const teamName = team ? team.name : goal.teamId;
@@ -109,23 +89,31 @@ export function getTopScorers(
     });
   });
 
-  return Object.values(scorersMap).sort((a, b) => b.goals - a.goals);
+  return Object.values(scorersMap).sort((a, b) => {
+    if (b.goals !== a.goals) {
+      return b.goals - a.goals;
+    }
+    return a.playerName.localeCompare(b.playerName);
+  });
 }
 
+/**
+ * Calcula a lista de atletas suspensos por equipe para as rodadas seguintes:
+ * - 2 cartões amarelos no mesmo jogo: suspenso na partida seguinte da equipe (DOUBLE_YELLOW);
+ * - 2 cartões amarelos acumulados em partidas distintas: suspenso na partida seguinte da equipe (ACCUMULATED_YELLOWS);
+ * - Cartão vermelho direto: suspenso na partida seguinte da equipe (RED_CARD).
+ */
 export function getSuspensions(
   teams: Team[],
   matches: Match[],
   scoresheets: Record<string, MatchScoresheet>
 ): PlayerSuspension[] {
   const suspensions: PlayerSuspension[] = [];
-
-  // Ordena partidas cronologicamente por rodada
   const sortedMatches = [...matches].sort((a, b) => a.roundNumber - b.roundNumber);
 
   teams.forEach(team => {
-    // Mapeia todas as partidas dessa equipe em ordem cronológica
     const teamMatches = sortedMatches.filter(m => m.homeTeamId === team.id || m.awayTeamId === team.id);
-    let accumulatedYellows: Record<number, number> = {};
+    const accumulatedYellows: Record<number, number> = {};
 
     teamMatches.forEach((m, matchIndex) => {
       const sheet = scoresheets[m.id];
@@ -134,7 +122,6 @@ export function getSuspensions(
       const nextTeamMatch = teamMatches[matchIndex + 1];
       const targetSuspensionRound = nextTeamMatch ? nextTeamMatch.roundNumber : m.roundNumber + 1;
 
-      // Cartões da equipe nessa partida
       const teamCards = sheet.cards.filter(c => c.teamId === team.id);
       const playerYellowsInMatch: Record<number, number> = {};
       const playerRedInMatch: Record<number, boolean> = {};
@@ -147,17 +134,19 @@ export function getSuspensions(
         }
       });
 
-      // Avaliação de disciplina
+      // Avaliação de cartões no jogo
       Object.keys(playerYellowsInMatch).forEach(idxStr => {
         const pIdx = Number(idxStr);
         const yellowsInThisGame = playerYellowsInMatch[pIdx];
+        const rawName = team.players[pIdx]?.trim();
+        const playerName = rawName ? `#${pIdx + 1} ${rawName}` : `#${pIdx + 1}`;
 
         if (yellowsInThisGame >= 2) {
           suspensions.push({
             teamId: team.id,
             teamName: team.name,
             playerIndex: pIdx,
-            playerName: team.players[pIdx] || `#${pIdx + 1}`,
+            playerName,
             suspendedForRoundNumber: targetSuspensionRound,
             reason: 'DOUBLE_YELLOW',
             originMatchId: m.id
@@ -169,23 +158,26 @@ export function getSuspensions(
               teamId: team.id,
               teamName: team.name,
               playerIndex: pIdx,
-              playerName: team.players[pIdx] || `#${pIdx + 1}`,
+              playerName,
               suspendedForRoundNumber: targetSuspensionRound,
               reason: 'ACCUMULATED_YELLOWS',
               originMatchId: m.id
             });
-            accumulatedYellows[pIdx] = 0; // zera após punição
+            accumulatedYellows[pIdx] = 0; // zera ciclo após cumprimento
           }
         }
       });
 
       Object.keys(playerRedInMatch).forEach(idxStr => {
         const pIdx = Number(idxStr);
+        const rawName = team.players[pIdx]?.trim();
+        const playerName = rawName ? `#${pIdx + 1} ${rawName}` : `#${pIdx + 1}`;
+
         suspensions.push({
           teamId: team.id,
           teamName: team.name,
           playerIndex: pIdx,
-          playerName: team.players[pIdx] || `#${pIdx + 1}`,
+          playerName,
           suspendedForRoundNumber: targetSuspensionRound,
           reason: 'RED_CARD',
           originMatchId: m.id
@@ -197,6 +189,9 @@ export function getSuspensions(
   return suspensions;
 }
 
+/**
+ * Determina se um jogador está suspenso para a partida da rodada informada.
+ */
 export function isPlayerSuspended(
   teamId: string,
   playerIndex: number,
@@ -207,10 +202,3 @@ export function isPlayerSuspended(
     s => s.teamId === teamId && s.playerIndex === playerIndex && s.suspendedForRoundNumber === roundNumber
   );
 }
-```
-
-## 5. Critérios de Aceitação da Tarefa
-- [x] Teste unitário cobre 100% dos fluxos de sincronização, artilharia e suspensão.
-- [x] 2 amarelos no mesmo jogo geram suspensão de duplo amarelo na próxima rodada do time.
-- [x] 2 amarelos em jogos diferentes geram suspensão por acúmulo e reiniciam o contador.
-- [x] Vermelho direto gera suspensão automática imediata.
