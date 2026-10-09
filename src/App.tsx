@@ -23,7 +23,11 @@ import { ExportTab } from './components/ExportTab';
 import { ScoresheetTab } from './components/ScoresheetTab';
 import { IOSInstallBanner } from './components/IOSInstallBanner';
 
-export function App() {
+export interface AppProps {
+  role?: 'torcida' | 'juiz';
+}
+
+export function App({ role = 'torcida' }: AppProps = {}) {
   const [state, setState] = useState<TournamentState>(() => loadTournamentState());
   const [activeTab, setActiveTab] = useState<TabType>('matches');
   const [useDeviceFrame, setUseDeviceFrame] = useState<boolean>(true);
@@ -200,7 +204,7 @@ export function App() {
 
   // Conteúdo interno do aplicativo
   const AppContent = (
-    <div className="flex flex-col min-h-full bg-[#0B1320] text-white font-sans selection:bg-[#00D26A] selection:text-[#0B1320]">
+    <div data-role={role} className="flex flex-col min-h-full bg-[#0B1320] text-white font-sans selection:bg-[#00D26A] selection:text-[#0B1320]">
       <Header
         finishedMatchesCount={finishedMatchesCount}
         totalMatchesCount={state.matches.length}

@@ -239,4 +239,21 @@ describe('Configurações de PWA, iOS e Resiliência Offline', () => {
 
     vi.unstubAllGlobals();
   });
+
+  it('deve possuir entrypoint juiz.html e manifesto dedicado manifest-juiz.json para o app do árbitro', () => {
+    const juizHtmlPath = path.join(rootDir, 'juiz.html');
+    const juizManifestPath = path.join(rootDir, 'public/manifest-juiz.json');
+
+    expect(fs.existsSync(juizHtmlPath)).toBe(true);
+    expect(fs.existsSync(juizManifestPath)).toBe(true);
+
+    const htmlContent = fs.readFileSync(juizHtmlPath, 'utf-8');
+    expect(htmlContent).toContain('manifest-juiz.json');
+    expect(htmlContent).toContain('juiz.tsx');
+
+    const manifestContent = JSON.parse(fs.readFileSync(juizManifestPath, 'utf-8'));
+    expect(manifestContent.start_url).toBe('./juiz.html');
+    expect(manifestContent.name).toContain('Árbitro');
+  });
 });
+

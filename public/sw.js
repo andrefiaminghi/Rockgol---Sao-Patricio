@@ -2,7 +2,9 @@ const CACHE_NAME = 'rockgol-cache-v3';
 const PRECACHE_ASSETS = [
   './',
   './index.html',
+  './juiz.html',
   './manifest.json',
+  './manifest-juiz.json',
   './logotipoapp.jpg',
   './icon-192.png',
   './icon-512.png'
