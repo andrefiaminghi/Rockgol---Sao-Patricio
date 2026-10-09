@@ -6,7 +6,7 @@ last_updated: "2026-10-09"
 
 ## Repositório
 - **Remote:** origin (https://github.com/andrefiaminghi/Rockgol---Sao-Patricio)
-- **Branch de trabalho:** feat/controle-sumula-juizes
+- **Branch de trabalho:** feat/sincronismo-supabase-pwa
 - **Branch de destino (PRs):** main
 - **Branch de produção:** main
 - **Fluxo de promoção:** feat/* → main (deploy contínuo automático via GitHub Actions para GitHub Pages e build de APK Android)

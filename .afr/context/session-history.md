@@ -1,9 +1,21 @@
 ---
-last_updated: "2026-10-09T14:48:00-03:00"
+last_updated: "2026-10-09T15:03:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
+
+## [2026-10-09] Brainstorming e Especificação Técnica: Sincronismo Supabase e PWAs Independentes
+- **Objetivo da Sessão:** Atender à solicitação de brainstorming e avaliação da demanda documentada em `.afr/context/sinc.md`, gerando a branch de trabalho e a especificação técnica formal para integração com o Supabase e criação de dois PWAs independentes (Juiz e Torcida).
+- **Vínculo à Task:** FEAT-2026-10-003 (Sincronismo Supabase e PWAs Independentes)
+- **Atividades Realizadas:**
+  - **Nova Branch:** Criada e ativada a branch `feat/sincronismo-supabase-pwa`, com atualização em [.afr/git-preferences.md](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/.afr/git-preferences.md).
+  - **Brainstorming Estruturado:**
+    - Alinhada a arquitetura multi-page no Vite com dois entrypoints: `index.html` (Torcida) e `juiz.html` (Árbitro protegido por PIN `2026`).
+    - Definido modelo do Supabase com tabelas dedicadas `scoresheets` e `teams` com RLS anônimo e scripts SQL DDL prontos.
+    - Definido mecanismo de sincronização do Juiz (envio automático ao salvar + botão no Header para pull e contingência offline).
+    - Definido mecanismo da Torcida (somente leitura oficial, botão "Sincronizar" no Header no lugar do "Reiniciar", simulação de placares permitida apenas localmente em jogos sem súmula).
+  - **Documento Canônico de Feature:** Especificação técnica formal criada e commitada em [.afr/features/sincronismo-supabase-pwa.md](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/.afr/features/sincronismo-supabase-pwa.md).
 
 ## [2026-10-09] Atualização da Estratégia de Cache do Service Worker (PWA) e GitHub Pages
 - **Objetivo da Sessão:** Diagnosticar e solucionar o problema de não atualização do PWA no GitHub Pages, onde o navegador continuava exibindo versões em cache antigo.
