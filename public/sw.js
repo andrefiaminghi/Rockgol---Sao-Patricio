@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rockgol-cache-v3';
+const CACHE_NAME = 'rockgol-cache-v4';
 const PRECACHE_ASSETS = [
   './',
   './index.html',

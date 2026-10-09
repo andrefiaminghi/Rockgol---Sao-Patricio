@@ -198,11 +198,17 @@ export function App({ role = 'torcida' }: AppProps = {}) {
   };
 
   // Handler para salvar/atualizar súmula oficial
-  const handleSaveScoresheet = (sheet: MatchScoresheet) => {
-    if (role === 'juiz') {
-      pushScoresheetToSupabase(sheet).catch(err => {
-        console.warn('Falha no sync da súmula para Supabase:', err);
-      });
+  const handleSaveScoresheet = async (sheet: MatchScoresheet) => {
+    try {
+      const res = await pushScoresheetToSupabase(sheet);
+      if (res.success) {
+        showToast('Súmula salva no banco com sucesso!');
+      } else {
+        showToast('Súmula salva localmente (aviso: erro no banco de dados).');
+      }
+    } catch (err) {
+      console.warn('Falha no sync da súmula para Supabase:', err);
+      showToast('Súmula salva localmente.');
     }
 
     setState(prev => {
@@ -234,21 +240,17 @@ export function App({ role = 'torcida' }: AppProps = {}) {
       return;
     }
 
-    // 2. Se for juiz (arbitragem), deleta o registro no Supabase com feedback visual
-    if (role === 'juiz') {
-      try {
-        const res = await deleteScoresheetFromSupabase(matchId);
-        if (res.success) {
-          showToast('Súmula excluída do banco com sucesso!');
-        } else {
-          showToast('Súmula limpa localmente (aviso: erro no banco de dados).');
-        }
-      } catch (err) {
-        console.warn('Falha ao deletar súmula no Supabase:', err);
-        showToast('Súmula limpa localmente.');
+    // 2. Deleta o registro no Supabase com feedback visual
+    try {
+      const res = await deleteScoresheetFromSupabase(matchId);
+      if (res.success) {
+        showToast('Súmula excluída do banco com sucesso!');
+      } else {
+        showToast('Súmula limpa localmente (aviso: erro no banco de dados).');
       }
-    } else {
-      showToast('Súmula limpa com sucesso!');
+    } catch (err) {
+      console.warn('Falha ao deletar súmula no Supabase:', err);
+      showToast('Súmula limpa localmente.');
     }
 
     // 3. Reseta os placares na memória e storage

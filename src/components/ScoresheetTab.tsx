@@ -597,19 +597,25 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
       )}
 
       {/* Modal de Súmula (Apenas Arbitragem) */}
-      {!readOnly && activeModalMatch && modalTeams && (
-        <ScoresheetModal
-          match={activeModalMatch}
-          homeTeam={modalTeams.homeTeam}
-          awayTeam={modalTeams.awayTeam}
-          currentScoresheet={scoresheets[activeModalMatch.id]}
-          suspensions={allSuspensions}
-          roundNumber={'roundNumber' in activeModalMatch ? activeModalMatch.roundNumber : 12}
-          onSave={onSaveScoresheet}
-          onDelete={onDeleteScoresheet}
-          onClose={() => setActiveModalMatch(null)}
-        />
-      )}
+      {!readOnly && activeModalMatch && modalTeams && (() => {
+        const modalDeleteCheck = canDeleteScoresheet(activeModalMatch.id, scoresheets);
+
+        return (
+          <ScoresheetModal
+            match={activeModalMatch}
+            homeTeam={modalTeams.homeTeam}
+            awayTeam={modalTeams.awayTeam}
+            currentScoresheet={scoresheets[activeModalMatch.id]}
+            suspensions={allSuspensions}
+            roundNumber={'roundNumber' in activeModalMatch ? activeModalMatch.roundNumber : 12}
+            canDelete={modalDeleteCheck.canDelete}
+            deleteDisabledReason={modalDeleteCheck.reason}
+            onSave={onSaveScoresheet}
+            onDelete={onDeleteScoresheet}
+            onClose={() => setActiveModalMatch(null)}
+          />
+        );
+      })()}
     </div>
   );
 };

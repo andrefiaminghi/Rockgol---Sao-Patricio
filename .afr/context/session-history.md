@@ -18,9 +18,10 @@ project: "Rockgol - São Patrício"
     - Adicionado banner de alerta no topo da listagem de rodadas de grupos (R1 ao R11) quando houver partidas do mata-mata registradas (`🔒 Súmulas da Fase de Grupos Bloqueadas para Limpeza`).
     - Botão "Limpar" nos cards da fase de grupos estilizado como "Bloqueado" com estilo desabilitado e tooltip explicativo quando o mata-mata estiver em andamento.
     - Atualizada a mensagem de confirmação para informar que o registro será excluído do banco de dados.
-  - **Integração Principal (`App.tsx`):**
-    - `handleDeleteScoresheet` atualizado para validar com `canDeleteScoresheet` e disparar toast explicativo caso bloqueado.
-    - Chamada assíncrona para `deleteScoresheetFromSupabase(matchId)` quando o usuário estiver no perfil de arbitragem (`role === 'juiz'`), exibindo feedback visual ("Súmula excluída do banco com sucesso!").
+  - **Integração Principal (`App.tsx` e `ScoresheetModal.tsx`):**
+    - `handleDeleteScoresheet` e `handleSaveScoresheet` atualizados para chamadas assíncronas incondicionais ao Supabase com `await` e feedback imediato via Toast.
+    - Integrada a trava de exclusão dentro de `ScoresheetModal.tsx`: o botão "Limpar Súmula" no rodapé do modal agora é desabilitado visualmente com badge "Bloqueado" e tooltip explicativo quando `canDelete` for falso (há mata-mata ativo).
+    - Service Worker atualizado para `rockgol-cache-v4` garantindo invalidação de cache e entrega imediata do bundle novo em dispositivos móveis.
   - **Testes Automatizados:**
     - [`tests/unit/scoresheetService.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetService.test.ts): 6 novos testes cobrindo todas as variações de bloqueio e liberação.
     - [`tests/unit/scoresheetTab.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetTab.test.ts): testes de conformidade de props e renderização.

@@ -10,6 +10,8 @@ interface ScoresheetModalProps {
   currentScoresheet?: MatchScoresheet;
   suspensions: PlayerSuspension[];
   roundNumber: number;
+  canDelete?: boolean;
+  deleteDisabledReason?: string;
   onSave: (sheet: MatchScoresheet) => void;
   onDelete?: (matchId: string) => void;
   onClose: () => void;
@@ -22,6 +24,8 @@ export const ScoresheetModal: React.FC<ScoresheetModalProps> = ({
   currentScoresheet,
   suspensions,
   roundNumber,
+  canDelete = true,
+  deleteDisabledReason,
   onSave,
   onDelete,
   onClose
@@ -479,11 +483,23 @@ export const ScoresheetModal: React.FC<ScoresheetModalProps> = ({
           {currentScoresheet?.hasScoresheet ? (
             <button
               type="button"
-              onClick={handleDelete}
-              className="text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-xl border border-red-500/20 transition-colors flex items-center gap-1.5"
+              disabled={!canDelete}
+              onClick={() => {
+                if (!canDelete) {
+                  alert(deleteDisabledReason || 'Limpeza bloqueada.');
+                  return;
+                }
+                handleDelete();
+              }}
+              className={`text-xs font-bold px-3 py-2 rounded-xl border transition-colors flex items-center gap-1.5 ${
+                !canDelete
+                  ? 'opacity-40 text-gray-400 border-gray-600 bg-gray-800/30 cursor-not-allowed'
+                  : 'text-red-400 hover:text-red-300 hover:bg-red-500/10 border-red-500/20'
+              }`}
+              title={!canDelete ? deleteDisabledReason : 'Limpar Súmula e Excluir do Banco'}
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Limpar Súmula</span>
+              <span>{!canDelete ? 'Bloqueado' : 'Limpar Súmula'}</span>
             </button>
           ) : (
             <div />
