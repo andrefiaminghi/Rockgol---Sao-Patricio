@@ -1,9 +1,21 @@
 ---
-last_updated: "2026-10-09T13:48:00-03:00"
+last_updated: "2026-10-09T14:48:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
+
+## [2026-10-09] Atualização da Estratégia de Cache do Service Worker (PWA) e GitHub Pages
+- **Objetivo da Sessão:** Diagnosticar e solucionar o problema de não atualização do PWA no GitHub Pages, onde o navegador continuava exibindo versões em cache antigo.
+- **Diagnóstico Técnico:**
+  - O workflow `deploy.yml` do GitHub Actions executou com sucesso o build do commit mais recente (`cde0de2`), e os arquivos servidos no GitHub Pages já continham o bundle atualizado.
+  - No entanto, o `public/sw.js` utilizava estratégia puramente Cache-First em todos os recursos (inclusive `index.html` e rota raiz `./`), associado a uma chave estática `rockgol-cache-v2`.
+  - Como consequência do "Cache Lock", dispositivos com o PWA ou com navegações anteriores interceptavam a requisição de inicialização e retornavam indefinidamente o `index.html` antigo do cache local, impedindo o carregamento dos novos scripts.
+- **Atividades Realizadas:**
+  - **Estratégia Network-First para Documentos (`public/sw.js`):** Modificado o evento `fetch` para usar Network-First em requisições de navegação (`request.mode === 'navigate'`) e documentos HTML, com fallback transparente para o cache offline caso o dispositivo esteja sem conexão.
+  - **Atualização da Versão de Cache:** Chave do cache incrementada para `rockgol-cache-v3`, garantindo limpeza imediata dos caches anteriores no evento `activate`.
+  - **Auto-Atualização e Reload (`src/main.tsx`):** Adicionado `registration.update()` no carregamento e listener de `controllerchange` para recarregar a aplicação de forma limpa e imediata assim que um novo Service Worker for ativado.
+  - **Verificação Completa:** 68/68 testes aprovados no Vitest (`npm test`) e compilação de produção (`npm run build`) validada sem erros.
 
 ## [2026-10-09] Bloqueio de Edição Manual de Placares na Aba Jogos Quando Súmula Estiver Registrada
 - **Objetivo da Sessão:** Atender à solicitação de que, quando uma partida possuir súmula oficial preenchida, os campos de placar na aba Jogos fiquem estritamente bloqueados para edição manual, garantindo integridade dos dados registrados pela arbitragem.
