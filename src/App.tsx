@@ -13,6 +13,12 @@ import {
   updateFinalsFromSemifinals
 } from './services/knockoutService';
 import { syncMatchScoresFromScoresheets, removeScoresheetAndResetMatch } from './services/scoresheetService';
+import {
+  pushScoresheetToSupabase,
+  deleteScoresheetFromSupabase,
+  pushTeamToSupabase
+} from './services/supabaseService';
+import { Team } from './types/tournament';
 import { Header } from './components/Header';
 import { Navigation, TabType } from './components/Navigation';
 import { MatchesTab } from './components/MatchesTab';
@@ -116,10 +122,18 @@ export function App({ role = 'torcida' }: AppProps = {}) {
   // Handler para atualizar elencos
   const handleUpdatePlayers = (teamId: string, players: string[]) => {
     setState(prev => {
+      let targetTeam: Team | undefined;
       const updatedTeams = prev.teams.map(t => {
         if (t.id !== teamId) return t;
-        return { ...t, players };
+        targetTeam = { ...t, players };
+        return targetTeam;
       });
+
+      if (role === 'juiz' && targetTeam) {
+        pushTeamToSupabase(targetTeam).catch(err => {
+          console.warn('Falha no sync do time para Supabase:', err);
+        });
+      }
 
       return {
         ...prev,
@@ -155,6 +169,12 @@ export function App({ role = 'torcida' }: AppProps = {}) {
 
   // Handler para salvar/atualizar súmula oficial
   const handleSaveScoresheet = (sheet: MatchScoresheet) => {
+    if (role === 'juiz') {
+      pushScoresheetToSupabase(sheet).catch(err => {
+        console.warn('Falha no sync da súmula para Supabase:', err);
+      });
+    }
+
     setState(prev => {
       const updatedSheets = { ...prev.scoresheets, [sheet.matchId]: sheet };
       const { matches, knockoutMatches } = syncMatchScoresFromScoresheets(
@@ -177,6 +197,12 @@ export function App({ role = 'torcida' }: AppProps = {}) {
 
   // Handler para remover/limpar súmula (zera o placar e desvincula a súmula)
   const handleDeleteScoresheet = (matchId: string) => {
+    if (role === 'juiz') {
+      deleteScoresheetFromSupabase(matchId).catch(err => {
+        console.warn('Falha ao deletar súmula no Supabase:', err);
+      });
+    }
+
     setState(prev => {
       const { matches, knockoutMatches, scoresheets } = removeScoresheetAndResetMatch(
         matchId,
@@ -230,7 +256,11 @@ export function App({ role = 'torcida' }: AppProps = {}) {
         )}
 
         {activeTab === 'teams' && (
-          <TeamsTab teams={state.teams} onUpdatePlayers={handleUpdatePlayers} />
+          <TeamsTab
+            teams={state.teams}
+            readOnly={role === 'torcida'}
+            onUpdatePlayers={handleUpdatePlayers}
+          />
         )}
 
         {activeTab === 'standings' && <StandingsTab standings={standings} />}
@@ -250,6 +280,7 @@ export function App({ role = 'torcida' }: AppProps = {}) {
             matches={state.matches}
             knockoutMatches={state.knockoutMatches}
             scoresheets={state.scoresheets}
+            readOnly={role === 'torcida'}
             onSaveScoresheet={handleSaveScoresheet}
             onDeleteScoresheet={handleDeleteScoresheet}
           />

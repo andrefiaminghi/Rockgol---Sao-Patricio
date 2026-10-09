@@ -20,6 +20,7 @@ interface ScoresheetTabProps {
   matches: Match[];
   knockoutMatches: KnockoutMatch[];
   scoresheets: Record<string, MatchScoresheet>;
+  readOnly?: boolean;
   onSaveScoresheet: (sheet: MatchScoresheet) => void;
   onDeleteScoresheet: (matchId: string) => void;
 }
@@ -31,6 +32,7 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
   matches,
   knockoutMatches,
   scoresheets,
+  readOnly = false,
   onSaveScoresheet,
   onDeleteScoresheet
 }) => {
@@ -337,43 +339,45 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
                     </div>
                   )}
 
-                  {/* Botões de Ação da Súmula */}
-                  <div className="mt-3 pt-2 flex items-center justify-end gap-2">
-                    {hasSheet && (
+                  {/* Botões de Ação da Súmula (Apenas Arbitragem) */}
+                  {!readOnly && (
+                    <div className="mt-3 pt-2 flex items-center justify-end gap-2">
+                      {hasSheet && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (
+                              confirm(
+                                'Deseja realmente limpar a súmula desta partida? Os placares na aba Súmula e na aba Jogos serão zerados.'
+                              )
+                            ) {
+                              onDeleteScoresheet(m.id);
+                            }
+                          }}
+                          className="text-xs font-bold px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20"
+                          title="Limpar Súmula e Zerar Placar"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Limpar</span>
+                        </button>
+                      )}
                       <button
                         type="button"
-                        onClick={() => {
-                          if (
-                            confirm(
-                              'Deseja realmente limpar a súmula desta partida? Os placares na aba Súmula e na aba Jogos serão zerados.'
-                            )
-                          ) {
-                            onDeleteScoresheet(m.id);
-                          }
-                        }}
-                        className="text-xs font-bold px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20"
-                        title="Limpar Súmula e Zerar Placar"
+                        disabled={!homeTeam || !awayTeam}
+                        onClick={() => setActiveModalMatch(m)}
+                        className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
+                          !homeTeam || !awayTeam
+                            ? 'bg-[#2F343C]/40 text-[#8F99A8]/40 cursor-not-allowed'
+                            : hasSheet
+                            ? 'bg-[#2F343C] hover:bg-[#383E47] text-white border border-[#383E47]'
+                            : 'bg-[#00D26A] hover:bg-[#00B85C] text-[#0B1320] shadow-md shadow-[#00D26A]/20'
+                        }`}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Limpar</span>
+                        <ClipboardList className="w-3.5 h-3.5" />
+                        <span>{hasSheet ? 'Editar Súmula' : 'Preencher Súmula'}</span>
                       </button>
-                    )}
-                    <button
-                      type="button"
-                      disabled={!homeTeam || !awayTeam}
-                      onClick={() => setActiveModalMatch(m)}
-                      className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
-                        !homeTeam || !awayTeam
-                          ? 'bg-[#2F343C]/40 text-[#8F99A8]/40 cursor-not-allowed'
-                          : hasSheet
-                          ? 'bg-[#2F343C] hover:bg-[#383E47] text-white border border-[#383E47]'
-                          : 'bg-[#00D26A] hover:bg-[#00B85C] text-[#0B1320] shadow-md shadow-[#00D26A]/20'
-                      }`}
-                    >
-                      <ClipboardList className="w-3.5 h-3.5" />
-                      <span>{hasSheet ? 'Editar Súmula' : 'Preencher Súmula'}</span>
-                    </button>
-                  </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -485,8 +489,8 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
         </div>
       )}
 
-      {/* Modal de Súmula */}
-      {activeModalMatch && modalTeams && (
+      {/* Modal de Súmula (Apenas Arbitragem) */}
+      {!readOnly && activeModalMatch && modalTeams && (
         <ScoresheetModal
           match={activeModalMatch}
           homeTeam={modalTeams.homeTeam}

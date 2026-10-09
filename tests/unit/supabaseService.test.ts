@@ -80,7 +80,6 @@ describe('Serviço de Sincronização Supabase (supabaseService)', () => {
     const team: Team = {
       id: 'team_1',
       name: 'Time A',
-      color: '#00D26A',
       players: ['Jogador 1', 'Jogador 2']
     };
 
@@ -110,7 +109,6 @@ describe('Serviço de Sincronização Supabase (supabaseService)', () => {
           {
             id: 'team_1',
             name: 'Time A',
-            color: '#00D26A',
             players: ['Jogador 1']
           }
         ],

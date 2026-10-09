@@ -100,7 +100,6 @@ export async function pushTeamToSupabase(
     const payload = {
       id: team.id,
       name: team.name,
-      color: team.color,
       players: team.players || [],
       updated_at: new Date().toISOString()
     };
@@ -174,7 +173,6 @@ export async function pullTournamentFromSupabase(): Promise<{
         teams.push({
           id: row.id,
           name: row.name,
-          color: row.color,
           players: Array.isArray(row.players) ? row.players : []
         });
       });
