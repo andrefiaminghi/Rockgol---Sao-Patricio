@@ -20,6 +20,7 @@ import { TeamsTab } from './components/TeamsTab';
 import { StandingsTab } from './components/StandingsTab';
 import { KnockoutTab } from './components/KnockoutTab';
 import { ExportTab } from './components/ExportTab';
+import { ScoresheetTab } from './components/ScoresheetTab';
 import { IOSInstallBanner } from './components/IOSInstallBanner';
 
 export function App() {
@@ -228,6 +229,17 @@ export function App() {
             teams={state.teams}
             isGroupStageDone={groupStageDone}
             onUpdateKnockoutScore={handleUpdateKnockoutScore}
+          />
+        )}
+
+        {activeTab === 'scoresheet' && (
+          <ScoresheetTab
+            teams={state.teams}
+            matches={state.matches}
+            knockoutMatches={state.knockoutMatches}
+            scoresheets={state.scoresheets}
+            onSaveScoresheet={handleSaveScoresheet}
+            onDeleteScoresheet={handleDeleteScoresheet}
           />
         )}
 
