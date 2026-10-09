@@ -1,11 +1,27 @@
 ---
-last_updated: "2026-10-09T11:28:00-03:00"
+last_updated: "2026-10-09T12:05:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
 
-## [2026-10-09] Formalização da Tríade Canônica AFR: Spec, Plano e Tarefas Atômicas da Súmula
+## [2026-10-09] Conclusão da Esteira TDD: Módulo Completo de Súmula, Artilharia, Disciplina e Exportações
+- **Objetivo da Sessão:** Executar rigorosamente o ciclo TDD (Red-Green-Refactor) para implementar o módulo completo de Controle de Súmula para Árbitros e Juízes no aplicativo do RockGol São Patrício 2026, concluindo as 6 tarefas atômicas do plano `plan-2026-10-09-002`.
+- **Vínculo à Task:** FEAT-2026-10-002 (`status: COMPLETED`), Plano `plan-2026-10-09-002` (`status: DONE`), Tasks `task-001` a `task-006` (`status: DONE`).
+- **Atividades Realizadas:**
+  - **Task 1 (Commit `829c97f`):** Tipagens em `src/types/tournament.ts` (`GoalEvent`, `CardEvent`, `MatchScoresheet`, `PlayerSuspension`, `TopScorer`, `TournamentState.scoresheets`) e suporte a fallback retrocompatível em `src/services/storageService.ts`.
+  - **Task 2 (Commit `14f90de`):** Serviço de domínio puro `src/services/scoresheetService.ts` com sincronização condicional de placar (`syncMatchScoresFromScoresheets`), ranking decrescente de artilharia (`getTopScorers`), apuração de suspensões (`getSuspensions`: 2 amarelos acumulados em rodadas distintas, 2 amarelos no jogo e vermelho direto) e verificação de escalação (`isPlayerSuspended`).
+  - **Task 3 (Commit `f9d87a8`):** Integração reativa no `src/App.tsx` com handlers `handleSaveScoresheet` e `handleDeleteScoresheet`, propagando automaticamente para a tabela da 1ª fase e persistência em `localStorage`.
+  - **Task 4 (Commit `2be17f7`):** Componente mobile `src/components/ScoresheetModal.tsx` com seleção rápida de autores de gols, suporte a gol contra, lançamento de cartões com bloqueio visual de atletas suspensos e observações livres do árbitro.
+  - **Task 5 (Commit `8d2a203`):** Aba dedicada `ScoresheetTab.tsx` no menu inferior `Navigation.tsx` (6 abas com ícone `ClipboardList`), com seletor de rodada, status das partidas, ranking de artilharia e quadro de suspensões integrado.
+  - **Task 6 (Commit `6a5c7e3`):** Formatadores de WhatsApp modulares (`formatTopScorersForWhatsApp`, `formatSuspensionsForWhatsApp`, `shareTopScorersToWhatsApp`, `shareSuspensionsToWhatsApp`), adição da Página 2 no relatório consolidado em PDF oficial (`generateAndDownloadTournamentPdf`) e interface renovada em `ExportTab.tsx` com download de PDF e 3 ações diretas de WhatsApp.
+  - **Garantia de Qualidade & Build:** 62 testes unitários aprovados com 100% de sucesso no Vitest (`npm test`) e compilação de produção (`tsc && vite build`) validada sem advertências de tipagem.
+- **Decisões Tomadas:**
+  - Dividir o relatório em PDF oficial em 2 páginas A4 elegantes para que a primeira mantenha a Classificação e Mata-Mata e a segunda concentre a Súmula Oficial, Artilharia, Suspensões e Observações da Arbitragem.
+  - Oferecer na aba Exportar 3 botões dedicados de envio para WhatsApp, permitindo ao organizador enviar comunicados específicos sem poluição visual.
+- **Próximos Passos:**
+  - Apresentar a conclusão da feature ao usuário para validação e homologação.
+
 - **Objetivo da Sessão:** Cumprir o fluxo da esteira AFR após a aprovação do design pelo usuário, formalizando a especificação da feature, o plano técnico de implementação e a decomposição em 6 tarefas atômicas para execução disciplinada via TDD.
 - **Vínculo à Task:** FEAT-2026-10-002, Plano `plan-2026-10-09-002`, Tasks `task-001` a `task-006`.
 - **Atividades Realizadas:**
