@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Download, Upload, RotateCcw, CheckCircle2, AlertCircle, MessageCircle } from 'lucide-react';
 import { TournamentState } from '../types/tournament';
-import { exportTournamentBackup, importTournamentBackup } from '../services/backupService';
+import { saveTournamentBackupFile, importTournamentBackup } from '../services/backupService';
 import { shareClassificationToWhatsApp } from '../services/pdfExportService';
 
 interface ExportTabProps {
@@ -14,21 +14,19 @@ export const ExportTab: React.FC<ExportTabProps> = ({ state, onRestoreState, onR
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [feedback, setFeedback] = useState<{ message: string; isError: boolean } | null>(null);
 
-  const handleDownloadBackup = () => {
+  const handleDownloadBackup = async () => {
     try {
-      const json = exportTournamentBackup(state);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `rockgol_2026_backup_${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      setFeedback({ message: 'Backup JSON baixado no aparelho com sucesso!', isError: false });
+      setFeedback({
+        message: 'Preparando arquivo de backup...',
+        isError: false
+      });
+      const result = await saveTournamentBackupFile(state);
+      setFeedback({
+        message: result.message,
+        isError: !result.success
+      });
     } catch (err: any) {
-      setFeedback({ message: `Erro ao baixar backup: ${err.message}`, isError: true });
+      setFeedback({ message: `Erro ao exportar backup: ${err.message}`, isError: true });
     }
   };
 

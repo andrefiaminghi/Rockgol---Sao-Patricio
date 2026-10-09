@@ -5,6 +5,23 @@ project: "Rockgol - São Patrício"
 
 # Histórico de Sessões — Rockgol - São Patrício
 
+## [2026-10-08] Correção do Download de Backup JSON com Seleção Nativa de Local (Android & Web)
+- **Objetivo da Sessão:** Identificar a causa raiz do download de JSON não salvar arquivos no aparelho celular e implementar mecanismo para que o usuário possa escolher o local exato (pasta / aplicativo) onde salvar o backup.
+- **Vínculo à Task:** FEAT-2026-10-001 (Persistência & Backup Mobile)
+- **Atividades Realizadas:**
+  - Diagnóstico da causa-raiz: o WebView do Android por padrão ignora downloads via Blob em tags `<a>` silenciosamente (documentado em `DIV-07`).
+  - Instalação e sincronização do plugin oficial `@capacitor/filesystem`.
+  - Implementação de `saveTournamentBackupFile` no `backupService.ts`:
+    - No Android nativo, grava o arquivo no armazenamento do dispositivo (`Filesystem.writeFile`) e aciona a folha do sistema operacional via `Share.share` com a URI física do arquivo, permitindo ao usuário escolher a opção nativa "Salvar em..." / "Copiar para...", escolhendo a pasta desejada (Downloads, Documentos, Drive, WhatsApp, etc.).
+    - Na Web, adicionado suporte à File System Access API (`showSaveFilePicker`) para abrir a caixa "Salvar como..." do sistema operacional.
+  - Atualização do componente `ExportTab.tsx` para usar o novo fluxo assíncrono com mensagens informativas.
+  - Atualização da suíte de testes com novo teste unitário cobrindo `saveTournamentBackupFile` (33/33 testes verdes).
+  - Sincronização dos plugins e web assets no Android nativo via `npx cap sync android`.
+- **Decisões Tomadas:**
+  - Utilizar a combinação `Filesystem` + `Share` para delegar ao sistema operacional a responsabilidade de escolha de pasta, respeitando as políticas modernas de Scoped Storage do Android.
+- **Próximos Passos:**
+  - Subir alterações para o repositório para geração de novo APK.
+
 ## [2026-10-08] Correção da Exportação de PDF Nativo e Compartilhamento via WhatsApp
 - **Objetivo da Sessão:** Corrigir a exportação de relatório para que o PDF seja baixado diretamente no celular sem abrir ou redirecionar para o Google Chrome, permitindo que o usuário permaneça dentro do aplicativo e possa optar por compartilhar o resumo formatado via WhatsApp.
 - **Vínculo à Task:** FEAT-2026-10-001 (Exportação & Distribuição Mobile)

@@ -20,6 +20,23 @@ maintainers: ["André Ribeiro"]
 | DIV-04 | CI/CD / Android | Capacitor CLI 7+ falha no GitHub Actions por exigir Node >= 22 | resolvido |
 | DIV-05 | CI/CD / Android | Capacitor 7 exige JDK 21 para compilação (error: invalid source release: 21) | resolvido |
 | DIV-06 | Mobile / PDF | Exportação de PDF com window.open direciona para o Chrome e trava retorno | resolvido |
+| DIV-07 | Mobile / Backup | Download de blob em WebView Android não salva arquivo físico no aparelho | resolvido |
+
+---
+
+## DIV-07 — Download de Blob via tag <a> em WebView Android não salva arquivo físico
+
+**Sintoma:** Ao clicar no botão de "Baixar Backup (.json)", o aplicativo exibia a mensagem de sucesso informando que o arquivo havia sido baixado, mas o usuário não encontrava o arquivo na pasta Downloads nem no armazenamento do celular.
+
+**Causa raiz:** O componente Android `WebView` não implementa `DownloadListener` por padrão para URLs do protocolo `blob:`. No navegador comum (Chrome de computador), o clique em `<a download>` captura o Blob e grava no disco. No WebView de um aplicativo empacotado (Capacitor/Cordova), a ação é ignorada silenciosamente sem lançar exceção no JavaScript.
+
+**Fix:**
+1. Instalar o plugin oficial `@capacitor/filesystem`.
+2. Gravar o arquivo físico no sistema de arquivos do dispositivo via `Filesystem.writeFile({ directory: Directory.Cache, encoding: Encoding.UTF8 })`.
+3. Disparar a folha nativa do Android via `Share.share({ url: fileResult.uri })`, que permite ao usuário escolher onde deseja salvar o arquivo (utilizando a opção nativa "Salvar em..." / "Copiar para...", escolhendo a pasta exata no gerenciador de arquivos do celular, além de WhatsApp, Google Drive, etc.).
+4. Para navegadores Web de computador, implementar suporte nativo à `showSaveFilePicker` (File System Access API), permitindo que o usuário escolha a pasta de destino no diálogo "Salvar como...".
+
+**Onde aplica:** `src/services/backupService.ts` e `src/components/ExportTab.tsx`.
 
 ---
 

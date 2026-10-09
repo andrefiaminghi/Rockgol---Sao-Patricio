@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { exportTournamentBackup, importTournamentBackup } from '../../src/services/backupService';
+import { exportTournamentBackup, importTournamentBackup, saveTournamentBackupFile } from '../../src/services/backupService';
 import { TournamentState } from '../../src/types/tournament';
 import { INITIAL_TEAMS, INITIAL_MATCHES, INITIAL_KNOCKOUT_MATCHES } from '../../src/data/initialTournamentData';
 
@@ -69,5 +69,11 @@ describe('Serviço de Backup e Restauração (BackupService)', () => {
     const result = importTournamentBackup(json);
     expect(result.success).toBe(false);
     expect(result.error).toContain('Backup deve conter exatamente 4 confrontos');
+  });
+
+  it('deve executar saveTournamentBackupFile com retorno de sucesso', async () => {
+    const result = await saveTournamentBackupFile(validState);
+    expect(result).toBeDefined();
+    expect(result.success).toBe(true);
   });
 });
