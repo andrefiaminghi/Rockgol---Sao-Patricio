@@ -1,7 +1,7 @@
 import React from 'react';
-import { Calendar, Users, Trophy, Swords, Download } from 'lucide-react';
+import { Calendar, Users, Trophy, Swords, ClipboardList, Download } from 'lucide-react';
 
-export type TabType = 'matches' | 'teams' | 'standings' | 'knockout' | 'export';
+export type TabType = 'matches' | 'teams' | 'standings' | 'knockout' | 'scoresheet' | 'export';
 
 interface NavigationProps {
   activeTab: TabType;
@@ -14,12 +14,13 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }
     { id: 'teams' as TabType, label: 'Times', icon: Users },
     { id: 'standings' as TabType, label: 'Classificação', icon: Trophy },
     { id: 'knockout' as TabType, label: 'Mata-Mata', icon: Swords },
+    { id: 'scoresheet' as TabType, label: 'Súmula', icon: ClipboardList },
     { id: 'export' as TabType, label: 'Exportar', icon: Download }
   ];
 
   return (
     <nav className="sticky bottom-0 left-0 right-0 z-40 bg-[#1C2127]/95 backdrop-blur-md border-t border-[#2F343C] pb-safe shadow-2xl">
-      <div className="grid grid-cols-5 px-1.5 py-2">
+      <div className="grid grid-cols-6 px-1 py-1.5">
         {tabs.map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

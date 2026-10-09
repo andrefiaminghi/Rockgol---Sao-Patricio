@@ -69,22 +69,44 @@ export function updateFinalsFromSemifinals(knockoutMatches: KnockoutMatch[]): Kn
   const sf1 = knockoutMatches.find(m => m.id === 'sf1');
   const sf2 = knockoutMatches.find(m => m.id === 'sf2');
 
-  const sf1Done = sf1?.status === 'FINISHED' && sf1.winnerTeamId && sf1.loserTeamId;
-  const sf2Done = sf2?.status === 'FINISHED' && sf2.winnerTeamId && sf2.loserTeamId;
+  const sf1Done = sf1?.status === 'FINISHED' && Boolean(sf1.winnerTeamId) && Boolean(sf1.loserTeamId);
+  const sf2Done = sf2?.status === 'FINISHED' && Boolean(sf2.winnerTeamId) && Boolean(sf2.loserTeamId);
 
   return knockoutMatches.map(m => {
     if (m.id === 'final') {
+      const homeTeamId = sf1Done ? sf1!.winnerTeamId : null;
+      const awayTeamId = sf2Done ? sf2!.winnerTeamId : null;
+      const ready = Boolean(homeTeamId && awayTeamId);
+
       return {
         ...m,
-        homeTeamId: sf1Done ? sf1!.winnerTeamId : m.homeTeamId,
-        awayTeamId: sf2Done ? sf2!.winnerTeamId : m.awayTeamId
+        homeTeamId,
+        awayTeamId,
+        homeScore: ready ? m.homeScore : null,
+        awayScore: ready ? m.awayScore : null,
+        homePenalties: ready ? m.homePenalties : null,
+        awayPenalties: ready ? m.awayPenalties : null,
+        winnerTeamId: ready ? m.winnerTeamId : null,
+        loserTeamId: ready ? m.loserTeamId : null,
+        status: ready ? m.status : ('PENDING' as const)
       };
     }
     if (m.id === 'third_place') {
+      const homeTeamId = sf1Done ? sf1!.loserTeamId : null;
+      const awayTeamId = sf2Done ? sf2!.loserTeamId : null;
+      const ready = Boolean(homeTeamId && awayTeamId);
+
       return {
         ...m,
-        homeTeamId: sf1Done ? sf1!.loserTeamId : m.homeTeamId,
-        awayTeamId: sf2Done ? sf2!.loserTeamId : m.awayTeamId
+        homeTeamId,
+        awayTeamId,
+        homeScore: ready ? m.homeScore : null,
+        awayScore: ready ? m.awayScore : null,
+        homePenalties: ready ? m.homePenalties : null,
+        awayPenalties: ready ? m.awayPenalties : null,
+        winnerTeamId: ready ? m.winnerTeamId : null,
+        loserTeamId: ready ? m.loserTeamId : null,
+        status: ready ? m.status : ('PENDING' as const)
       };
     }
     return m;

@@ -1,0 +1,9 @@
+[AUDIT APPROVED] plan-2026-10-09-002-task-006
+Auditor: afr-tdd:adversarial-auditor
+Status: APPROVED
+Verification:
+- src/services/pdfExportService.ts possui formatTopScorersForWhatsApp e formatSuspensionsForWhatsApp devidamente implementados e testados.
+- Relatório em PDF oficial estendido com página 2 dedicada à Súmula, Artilharia, Suspensões e Observações dos Árbitros.
+- src/components/ExportTab.tsx atualizado com botão de download do PDF consolidado e 3 opções modulares de compartilhamento no WhatsApp.
+- tests/unit/scoresheetExport.test.ts cobrindo formatadores e relatório com 100% de sucesso.
+- Suíte completa de testes executando com 62/62 testes verdes e build de produção (tsc && vite build) concluído com sucesso.

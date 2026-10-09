@@ -8,6 +8,7 @@ export function createDefaultTournamentState(): TournamentState {
     teams: INITIAL_TEAMS,
     matches: INITIAL_MATCHES,
     knockoutMatches: INITIAL_KNOCKOUT_MATCHES,
+    scoresheets: {},
     version: 1,
     lastUpdated: new Date().toISOString()
   };
@@ -28,7 +29,10 @@ export function loadTournamentState(): TournamentState {
 
     const parsed = JSON.parse(raw);
     if (parsed && Array.isArray(parsed.teams) && Array.isArray(parsed.matches)) {
-      return parsed as TournamentState;
+      return {
+        ...parsed,
+        scoresheets: parsed.scoresheets || {}
+      } as TournamentState;
     }
   } catch (err) {
     console.error('Falha ao ler localStorage, utilizando estado padrão:', err);

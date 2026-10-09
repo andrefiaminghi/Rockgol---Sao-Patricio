@@ -1,15 +1,21 @@
 import React from 'react';
-import { Clock, Coffee, CheckCircle2, MapPin } from 'lucide-react';
-import { Match, Team } from '../types/tournament';
+import { Clock, Coffee, CheckCircle2, MapPin, Lock } from 'lucide-react';
+import { Match, Team, MatchScoresheet } from '../types/tournament';
 import { ROUND_RESTING_TEAMS } from '../data/initialTournamentData';
 
 interface MatchesTabProps {
   matches: Match[];
   teams: Team[];
+  scoresheets?: Record<string, MatchScoresheet>;
   onUpdateScore: (matchId: string, homeScore: number | null, awayScore: number | null) => void;
 }
 
-export const MatchesTab: React.FC<MatchesTabProps> = ({ matches, teams, onUpdateScore }) => {
+export const MatchesTab: React.FC<MatchesTabProps> = ({
+  matches,
+  teams,
+  scoresheets,
+  onUpdateScore
+}) => {
   const teamMap = new Map<string, string>();
   teams.forEach(t => teamMap.set(t.id, t.name));
 
@@ -22,6 +28,12 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ matches, teams, onUpdate
     isHome: boolean,
     val: string
   ) => {
+    // Se a partida tiver súmula registrada, a edição manual fica estritamente bloqueada
+    const sheet = scoresheets?.[matchId];
+    if (sheet && sheet.hasScoresheet) {
+      return;
+    }
+
     if (val === '') {
       if (isHome) {
         onUpdateScore(matchId, null, currentAwayScore);
@@ -110,14 +122,18 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ matches, teams, onUpdate
                 {roundMatches.map(match => {
                   const homeName = teamMap.get(match.homeTeamId) || match.homeTeamId;
                   const awayName = teamMap.get(match.awayTeamId) || match.awayTeamId;
+                  const sheet = scoresheets?.[match.id];
+                  const hasScoresheet = Boolean(sheet && sheet.hasScoresheet);
                   const isFinished = match.status === 'FINISHED';
 
                   return (
                     <div
                       key={match.id}
                       className={`p-3 rounded-xl border transition-all ${
-                        isFinished
+                        hasScoresheet
                           ? 'bg-[#0E1726] border-[#00D26A]/40 shadow-sm'
+                          : isFinished
+                          ? 'bg-[#0E1726] border-[#00D26A]/30 shadow-sm'
                           : 'bg-[#0E1726]/80 border-[#1E2D44]'
                       }`}
                     >
@@ -126,12 +142,21 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ matches, teams, onUpdate
                           <MapPin className="w-3 h-3 text-[#00D26A]" />
                           {match.field}
                         </span>
-                        {isFinished && (
+
+                        {hasScoresheet ? (
+                          <span
+                            className="text-[10px] font-bold text-[#00D26A] bg-[#00D26A]/10 border border-[#00D26A]/30 px-2 py-0.5 rounded-md flex items-center gap-1"
+                            title="Placar controlado pela súmula de arbitragem. Edição manual bloqueada."
+                          >
+                            <Lock className="w-3 h-3 text-[#00D26A]" />
+                            Súmula Oficial
+                          </span>
+                        ) : isFinished ? (
                           <span className="text-[10px] font-bold text-[#00D26A] flex items-center gap-1">
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             Finalizado
                           </span>
-                        )}
+                        ) : null}
                       </div>
 
                       {/* Placar Confronto */}
@@ -149,6 +174,7 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ matches, teams, onUpdate
                           inputMode="numeric"
                           min="0"
                           max="99"
+                          disabled={hasScoresheet}
                           value={match.homeScore !== null ? match.homeScore : ''}
                           onChange={e =>
                             handleScoreChange(
@@ -159,8 +185,17 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ matches, teams, onUpdate
                               e.target.value
                             )
                           }
-                          className="w-11 h-10 text-center font-black text-base bg-[#0B1320] border border-[#1E2D44] focus:border-[#00D26A] rounded-xl text-white outline-none transition tabular-nums"
+                          className={`w-11 h-10 text-center font-black text-base rounded-xl outline-none transition tabular-nums ${
+                            hasScoresheet
+                              ? 'bg-[#141C28] text-white/90 border border-[#00D26A]/40 cursor-not-allowed shadow-inner'
+                              : 'bg-[#0B1320] text-white border border-[#1E2D44] focus:border-[#00D26A]'
+                          }`}
                           placeholder="-"
+                          title={
+                            hasScoresheet
+                              ? 'Placar oficial definido via súmula. Para alterar, utilize a aba Súmula.'
+                              : 'Editar placar'
+                          }
                         />
 
                         {/* Divisor X */}
@@ -174,6 +209,7 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ matches, teams, onUpdate
                           inputMode="numeric"
                           min="0"
                           max="99"
+                          disabled={hasScoresheet}
                           value={match.awayScore !== null ? match.awayScore : ''}
                           onChange={e =>
                             handleScoreChange(
@@ -184,8 +220,17 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ matches, teams, onUpdate
                               e.target.value
                             )
                           }
-                          className="w-11 h-10 text-center font-black text-base bg-[#0B1320] border border-[#1E2D44] focus:border-[#00D26A] rounded-xl text-white outline-none transition tabular-nums"
+                          className={`w-11 h-10 text-center font-black text-base rounded-xl outline-none transition tabular-nums ${
+                            hasScoresheet
+                              ? 'bg-[#141C28] text-white/90 border border-[#00D26A]/40 cursor-not-allowed shadow-inner'
+                              : 'bg-[#0B1320] text-white border border-[#1E2D44] focus:border-[#00D26A]'
+                          }`}
                           placeholder="-"
+                          title={
+                            hasScoresheet
+                              ? 'Placar oficial definido via súmula. Para alterar, utilize a aba Súmula.'
+                              : 'Editar placar'
+                          }
                         />
 
                         {/* Time Visitante (Direita) */}
@@ -195,6 +240,18 @@ export const MatchesTab: React.FC<MatchesTabProps> = ({ matches, teams, onUpdate
                           </span>
                         </div>
                       </div>
+
+                      {/* Aviso de Súmula Vinculada */}
+                      {hasScoresheet && (
+                        <div className="mt-2.5 pt-1.5 border-t border-[#1E2D44]/60 flex items-center justify-between text-[10px] text-[#8B9BB4]">
+                          <span className="flex items-center gap-1 text-[#00D26A]">
+                            <Lock className="w-3 h-3" /> Placar vinculado à súmula
+                          </span>
+                          <span className="text-[#5D6E87]">
+                            Edição bloqueada
+                          </span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

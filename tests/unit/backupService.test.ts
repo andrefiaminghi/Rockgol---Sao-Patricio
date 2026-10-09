@@ -8,6 +8,7 @@ describe('Serviço de Backup e Restauração (BackupService)', () => {
     teams: INITIAL_TEAMS,
     matches: INITIAL_MATCHES,
     knockoutMatches: INITIAL_KNOCKOUT_MATCHES,
+    scoresheets: {},
     version: 1,
     lastUpdated: '2026-10-08T18:00:00.000Z'
   };

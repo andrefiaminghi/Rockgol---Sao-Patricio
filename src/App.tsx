@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Smartphone, Monitor, Wifi, Battery, Sparkles } from 'lucide-react';
-import { TournamentState, KnockoutMatch } from './types/tournament';
+import { TournamentState, KnockoutMatch, MatchScoresheet } from './types/tournament';
 import {
   loadTournamentState,
   saveTournamentState,
@@ -12,6 +12,7 @@ import {
   resolveKnockoutMatch,
   updateFinalsFromSemifinals
 } from './services/knockoutService';
+import { syncMatchScoresFromScoresheets, removeScoresheetAndResetMatch } from './services/scoresheetService';
 import { Header } from './components/Header';
 import { Navigation, TabType } from './components/Navigation';
 import { MatchesTab } from './components/MatchesTab';
@@ -19,6 +20,7 @@ import { TeamsTab } from './components/TeamsTab';
 import { StandingsTab } from './components/StandingsTab';
 import { KnockoutTab } from './components/KnockoutTab';
 import { ExportTab } from './components/ExportTab';
+import { ScoresheetTab } from './components/ScoresheetTab';
 import { IOSInstallBanner } from './components/IOSInstallBanner';
 
 export function App() {
@@ -78,6 +80,11 @@ export function App() {
     awayScore: number | null
   ) => {
     setState(prev => {
+      // Bloqueia edição manual se houver súmula oficial registrada
+      if (prev.scoresheets?.[matchId]?.hasScoresheet) {
+        return prev;
+      }
+
       const updatedMatches = prev.matches.map(m => {
         if (m.id !== matchId) return m;
         const status = homeScore !== null && awayScore !== null ? 'FINISHED' : 'PENDING';
@@ -137,6 +144,50 @@ export function App() {
     });
   };
 
+  // Handler para salvar/atualizar súmula oficial
+  const handleSaveScoresheet = (sheet: MatchScoresheet) => {
+    setState(prev => {
+      const updatedSheets = { ...prev.scoresheets, [sheet.matchId]: sheet };
+      const { matches, knockoutMatches } = syncMatchScoresFromScoresheets(
+        prev.matches,
+        prev.knockoutMatches,
+        updatedSheets
+      );
+
+      const updatedState: TournamentState = {
+        ...prev,
+        matches,
+        knockoutMatches,
+        scoresheets: updatedSheets,
+        lastUpdated: new Date().toISOString()
+      };
+      saveTournamentState(updatedState);
+      return updatedState;
+    });
+  };
+
+  // Handler para remover/limpar súmula (zera o placar e desvincula a súmula)
+  const handleDeleteScoresheet = (matchId: string) => {
+    setState(prev => {
+      const { matches, knockoutMatches, scoresheets } = removeScoresheetAndResetMatch(
+        matchId,
+        prev.matches,
+        prev.knockoutMatches,
+        prev.scoresheets
+      );
+
+      const updatedState: TournamentState = {
+        ...prev,
+        matches,
+        knockoutMatches,
+        scoresheets,
+        lastUpdated: new Date().toISOString()
+      };
+      saveTournamentState(updatedState);
+      return updatedState;
+    });
+  };
+
   const handleRestoreState = (newState: TournamentState) => {
     setState(newState);
     saveTournamentState(newState);
@@ -164,6 +215,7 @@ export function App() {
           <MatchesTab
             matches={state.matches}
             teams={state.teams}
+            scoresheets={state.scoresheets}
             onUpdateScore={handleUpdateMatchScore}
           />
         )}
@@ -180,6 +232,17 @@ export function App() {
             teams={state.teams}
             isGroupStageDone={groupStageDone}
             onUpdateKnockoutScore={handleUpdateKnockoutScore}
+          />
+        )}
+
+        {activeTab === 'scoresheet' && (
+          <ScoresheetTab
+            teams={state.teams}
+            matches={state.matches}
+            knockoutMatches={state.knockoutMatches}
+            scoresheets={state.scoresheets}
+            onSaveScoresheet={handleSaveScoresheet}
+            onDeleteScoresheet={handleDeleteScoresheet}
           />
         )}
 

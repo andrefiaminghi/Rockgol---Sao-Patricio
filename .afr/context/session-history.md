@@ -1,9 +1,144 @@
 ---
-last_updated: "2026-10-09T08:00:00-03:00"
+last_updated: "2026-10-09T13:48:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
+
+## [2026-10-09] Bloqueio de Edição Manual de Placares na Aba Jogos Quando Súmula Estiver Registrada
+- **Objetivo da Sessão:** Atender à solicitação de que, quando uma partida possuir súmula oficial preenchida, os campos de placar na aba Jogos fiquem estritamente bloqueados para edição manual, garantindo integridade dos dados registrados pela arbitragem.
+- **Vínculo à Task:** FEAT-2026-10-002 (Governança e Integridade de Placares da Súmula)
+- **Atividades Realizadas:**
+  - **Interface da Aba Jogos (`MatchesTab`):**
+    - Atualizada a prop `scoresheets` no componente [src/components/MatchesTab.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/MatchesTab.tsx).
+    - Desabilitados os inputs de placar mandante e visitante (`disabled={hasScoresheet}`) com estilos visuais de bloqueio (`cursor-not-allowed`, fundo escurecido e borda suave).
+    - Adicionado badge de identificação `🔒 Súmula Oficial` no cabeçalho do card da partida e aviso de bloqueio no rodapé `🔒 Placar vinculado à súmula (Edição bloqueada)`.
+    - Guarda no `handleScoreChange` para abortar qualquer tentativa de alteração manual se a partida tiver súmula ativa.
+  - **Camada de Estado Global (`App.tsx`):**
+    - Passada a prop `scoresheets={state.scoresheets}` para `<MatchesTab />` em [src/App.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/App.tsx).
+    - Adicionada trava de segurança no manipulador `handleUpdateMatchScore`: se `state.scoresheets[matchId]?.hasScoresheet` for verdadeiro, a mutação de placar manual é ignorada.
+  - **Testes Automatizados:** Adicionado teste de integração em [tests/unit/scoresheetIntegration.test.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetIntegration.test.ts) validando que partidas com súmula preenchida bloqueiam edição e partidas sem súmula permanecem editáveis.
+  - **Verificação Completa:** 68/68 testes aprovados no Vitest (`npm test`) e compilação de produção (`npm run build`) concluída com sucesso.
+
+## [2026-10-09] Identificação de Fases Mata-Mata, Pênaltis na Súmula e Nomes de Jogadores na Artilharia
+- **Objetivo da Sessão:** Atender a três demandas de UI/domínio na aba Súmula:
+  1. Identificação explícita de fase nos cards de mata-mata ("Semifinal 1/2", "Disputa de 3º e 4º Lugar", "Grande Final");
+  2. Exibição do placar de pênaltis nos cards de mata-mata da aba Súmula quando houver decisão por penalidades;
+  3. Resolução dinâmica dos nomes dos jogadores na lista de Artilharia a partir dos nomes preenchidos na aba Times.
+- **Vínculo à Task:** FEAT-2026-10-002 (Refinamento de UI/UX e Domínio da Súmula)
+- **Atividades Realizadas:**
+  - **Identificação de Fase no Card Mata-Mata:** Em [src/components/ScoresheetTab.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/ScoresheetTab.tsx), adicionados badges de destaque para "🏆 Grande Final", "🥉 Disputa de 3º e 4º Lugar" e "⚔️ Semifinal 1/2" com estilo visual dedicado.
+  - **Exibição de Pênaltis:** Adicionada exibição tabular de penalidades `({pen} pen)` ao lado do nome dos times e banner centralizado de decisão por pênaltis no card de confronto de mata-mata na aba Súmula.
+  - **Resolução Dinâmica de Nomes na Artilharia:** Atualizado `getTopScorers` em [src/services/scoresheetService.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/services/scoresheetService.ts) para consultar dinamicamente `team.players[playerIndex]`, garantindo que nomes preenchidos na aba Times apareçam na Artilharia, no resumo de gols da partida e nas exportações.
+  - **Testes Automatizados:** Adicionado teste unitário em [tests/unit/scoresheetService.test.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetService.test.ts) validando a resolução do nome do jogador cadastrado na aba Times.
+  - **Verificação Completa:** 67/67 testes aprovados no Vitest (`npm test`) e build de produção (`npm run build`) executado com sucesso.
+
+## [2026-10-09] Limpeza de Súmula e Zeramento Completo de Placares (Aba Súmula e Aba Jogos)
+- **Objetivo da Sessão:** Atender à solicitação de que, ao limpar/remover uma súmula, os placares da partida correspondente sejam imediatamente zerados (voltando ao estado pendente `- × -`) tanto na lista de partidas da aba Súmula quanto nos campos da aba Jogos e na tabela de classificação/mata-mata.
+- **Vínculo à Task:** FEAT-2026-10-002 (Limpeza de Súmula e Integridade de Estado)
+- **Atividades Realizadas:**
+  - **Função Pura de Domínio:** Criada a função `removeScoresheetAndResetMatch` em [src/services/scoresheetService.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/services/scoresheetService.ts) que exclui a súmula, define `homeScore = null`, `awayScore = null`, `status = 'PENDING'` e re-sincroniza todas as dependências.
+  - **Proteção do Chaveamento Mata-Mata:** Atualizado `updateFinalsFromSemifinals` em [src/services/knockoutService.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/services/knockoutService.ts) para que, se a semifinal for limpa, a vaga na final ou 3º lugar volte para `null` ("A definir") e qualquer placar pendente nas finais seja zerado.
+  - **Interface do Modal:** Atualizado [src/components/ScoresheetModal.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/ScoresheetModal.tsx) com botão explícito "Limpar Súmula" e alerta descritivo de confirmação.
+  - **Ação Rápida no Card:** Adicionado botão de atalho "Limpar" no card da partida em [src/components/ScoresheetTab.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/ScoresheetTab.tsx) para permitir zerar súmulas registradas diretamente da lista.
+  - **Testes Automatizados:** Adicionados 2 novos testes de integração em [tests/unit/scoresheetIntegration.test.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetIntegration.test.ts), validando que a limpeza da súmula na 1ª fase e nas semifinais zera placares e remove pontos/confrontos da tabela.
+  - **Verificação Completa:** 66/66 testes aprovados no Vitest (`npm test`) e compilação de produção (`npm run build`) validada sem erros.
+
+## [2026-10-09] Correção da Propagação de Semifinais da Súmula para Grande Final e 3º Lugar
+- **Objetivo da Sessão:** Corrigir a falha em que o preenchimento da súmula das semifinais (`sf1` e `sf2`) não estava alimentando os times vencedores na Grande Final (`final`) e perdedores na Disputa de 3º Lugar (`third_place`).
+- **Vínculo à Task:** FEAT-2026-10-002 (Integração e Propagação de Mata-Mata da Súmula)
+- **Causa Raiz Identificada:**
+  - `syncMatchScoresFromScoresheets` apenas atribuía `homeScore` e `awayScore` nas partidas eliminatórias, mas deixava `winnerTeamId` e `loserTeamId` indefinidos e o status como `PENDING`.
+  - Como `updateFinalsFromSemifinals` exige `sf.status === 'FINISHED' && sf.winnerTeamId && sf.loserTeamId`, os confrontos da final e do 3º lugar nunca recebiam os times classificados.
+  - Além disso, partidas eliminatórias terminadas em empate no tempo normal não possuíam campos nem validação de disputa de pênaltis na interface da súmula.
+- **Atividades Realizadas:**
+  - **TDD / Teste de Regressão:** Adicionados testes em [tests/unit/scoresheetIntegration.test.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetIntegration.test.ts) validando a propagação automática de vencedores/perdedores das semifinais para final e 3º lugar, além de teste cobrindo desempate por cobrança de pênaltis na súmula.
+  - **Serviço de Sincronização:** Atualizado [src/services/scoresheetService.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/services/scoresheetService.ts) para invocar `resolveKnockoutMatch` nas partidas com súmula ativa (definindo `winnerTeamId`, `loserTeamId`, `status: 'FINISHED'`) e chamar `updateFinalsFromSemifinals` centralizadamente ao final do fluxo.
+  - **Interface do Modal:** Em [src/components/ScoresheetModal.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/ScoresheetModal.tsx), adicionada seção interativa de cobrança de pênaltis para jogos de mata-mata empatados no tempo normal, com validações obrigatórias para impedir empates nas penalidades.
+  - **Desfazer / Limpeza de Súmula:** Ajustado `handleDeleteScoresheet` em [src/App.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/App.tsx) para redefinir a partida para pendente e re-sincronizar as finais sem quebrar o chaveamento.
+  - **Verificações:** 64/64 testes unitários e de integração aprovados no Vitest; compilação de produção (`npm run build`) validada sem erros.
+- **Decisões Tomadas:**
+  - Centralizar a chamada de `updateFinalsFromSemifinals` diretamente no retorno de `syncMatchScoresFromScoresheets` para garantir consistência automática tanto ao salvar quanto ao deletar ou sincronizar súmulas.
+  - Adicionar suporte completo a pênaltis nas súmulas eliminatórias (`homePenalties`, `awayPenalties`).
+
+## [2026-10-09] Ajuste de Usabilidade Mobile: Distribuição das Rodadas da Súmula em Grade de 2 Linhas
+- **Objetivo da Sessão:** Atender à solicitação de usabilidade do usuário para eliminar a necessidade de rolagem horizontal na seleção de rodadas na aba "Súmula", organizando os 12 seletores em duas linhas visíveis simultaneamente.
+- **Vínculo à Task:** FEAT-2026-10-002 (Refinamento de UI/UX Mobile)
+- **Atividades Realizadas:**
+  - Substituição do contêiner `flex overflow-x-auto` por uma grade responsiva `grid grid-cols-6 gap-1.5 sm:gap-2` no [src/components/ScoresheetTab.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/ScoresheetTab.tsx).
+  - Distribuição exata dos 12 seletores em 2 linhas:
+    - Linha 1: R1, R2, R3, R4, R5, R6
+    - Linha 2: R7, R8, R9, R10, R11, Mata-Mata
+  - Execução e aprovação de 100% dos testes unitários (62/62 testes passando no Vitest).
+  - Validação de compilação e build de produção (`npm run build`) sem erros.
+  - Commit atômico realizado: `aea9841 fix(ui): distribuir seletores de rodada da sumula em 2 linhas sem scroll horizontal`.
+- **Decisões Tomadas:**
+  - Adotar `grid-cols-6` para que os 12 botões de rodada fiquem perfeitamente balanceados (6 em cada linha), acessíveis com toque direto sem deslizar horizontalmente.
+- **Próximos Passos:**
+  - Notificar o usuário que a alteração já está aplicada e ativa no ambiente local.
+
+## [2026-10-09] Conclusão da Esteira TDD: Módulo Completo de Súmula, Artilharia, Disciplina e Exportações
+- **Objetivo da Sessão:** Executar rigorosamente o ciclo TDD (Red-Green-Refactor) para implementar o módulo completo de Controle de Súmula para Árbitros e Juízes no aplicativo do RockGol São Patrício 2026, concluindo as 6 tarefas atômicas do plano `plan-2026-10-09-002`.
+- **Vínculo à Task:** FEAT-2026-10-002 (`status: COMPLETED`), Plano `plan-2026-10-09-002` (`status: DONE`), Tasks `task-001` a `task-006` (`status: DONE`).
+- **Atividades Realizadas:**
+  - **Task 1 (Commit `829c97f`):** Tipagens em `src/types/tournament.ts` (`GoalEvent`, `CardEvent`, `MatchScoresheet`, `PlayerSuspension`, `TopScorer`, `TournamentState.scoresheets`) e suporte a fallback retrocompatível em `src/services/storageService.ts`.
+  - **Task 2 (Commit `14f90de`):** Serviço de domínio puro `src/services/scoresheetService.ts` com sincronização condicional de placar (`syncMatchScoresFromScoresheets`), ranking decrescente de artilharia (`getTopScorers`), apuração de suspensões (`getSuspensions`: 2 amarelos acumulados em rodadas distintas, 2 amarelos no jogo e vermelho direto) e verificação de escalação (`isPlayerSuspended`).
+  - **Task 3 (Commit `f9d87a8`):** Integração reativa no `src/App.tsx` com handlers `handleSaveScoresheet` e `handleDeleteScoresheet`, propagando automaticamente para a tabela da 1ª fase e persistência em `localStorage`.
+  - **Task 4 (Commit `2be17f7`):** Componente mobile `src/components/ScoresheetModal.tsx` com seleção rápida de autores de gols, suporte a gol contra, lançamento de cartões com bloqueio visual de atletas suspensos e observações livres do árbitro.
+  - **Task 5 (Commit `8d2a203`):** Aba dedicada `ScoresheetTab.tsx` no menu inferior `Navigation.tsx` (6 abas com ícone `ClipboardList`), com seletor de rodada, status das partidas, ranking de artilharia e quadro de suspensões integrado.
+  - **Task 6 (Commit `6a5c7e3`):** Formatadores de WhatsApp modulares (`formatTopScorersForWhatsApp`, `formatSuspensionsForWhatsApp`, `shareTopScorersToWhatsApp`, `shareSuspensionsToWhatsApp`), adição da Página 2 no relatório consolidado em PDF oficial (`generateAndDownloadTournamentPdf`) e interface renovada em `ExportTab.tsx` com download de PDF e 3 ações diretas de WhatsApp.
+  - **Garantia de Qualidade & Build:** 62 testes unitários aprovados com 100% de sucesso no Vitest (`npm test`) e compilação de produção (`tsc && vite build`) validada sem advertências de tipagem.
+- **Decisões Tomadas:**
+  - Dividir o relatório em PDF oficial em 2 páginas A4 elegantes para que a primeira mantenha a Classificação e Mata-Mata e a segunda concentre a Súmula Oficial, Artilharia, Suspensões e Observações da Arbitragem.
+  - Oferecer na aba Exportar 3 botões dedicados de envio para WhatsApp, permitindo ao organizador enviar comunicados específicos sem poluição visual.
+- **Próximos Passos:**
+  - Apresentar a conclusão da feature ao usuário para validação e homologação.
+
+## [2026-10-09] Formalização da Tríade Canônica AFR: Spec, Plano e Tarefas Atômicas da Súmula
+- **Vínculo à Task:** FEAT-2026-10-002, Plano `plan-2026-10-09-002`, Tasks `task-001` a `task-006`.
+- **Atividades Realizadas:**
+  - Criação da especificação formal [.afr/features/controle-sumula-juizes.md](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/.afr/features/controle-sumula-juizes.md) com User Story, contratos de dados em código TypeScript, 5 invariantes numeradas (`INV-01` a `INV-05`), 5 critérios BDD estritos (`AC-001` a `AC-005`), casos negativos e exclusões de escopo.
+  - Criação do plano de implementação detalhado [.afr/plans/plan-2026-10-09-002.md](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/.afr/plans/plan-2026-10-09-002.md) com granularidade de passos RED, GREEN e Commits frequentes.
+  - Decomposição em 6 tarefas atômicas estritas em `.afr/tasks/`:
+    - `task-001`: Modelos de Domínio, Tipagem e Retrocompatibilidade de Storage
+    - `task-002`: Serviço de Súmula, Sincronização e Regras de Suspensão (`scoresheetService.ts`)
+    - `task-003`: Integração dos Handlers Reativos no Estado Global (`App.tsx`)
+    - `task-004`: Componente Modal de Preenchimento da Súmula (`ScoresheetModal.tsx`)
+    - `task-005`: Nova Aba "Súmula" e Integração na Barra de Navegação (`ScoresheetTab.tsx` e `Navigation.tsx`)
+    - `task-006`: Exportação Modular WhatsApp e Relatório em PDF Consolidado (`pdfExportService.ts` e `ExportTab.tsx`)
+  - Atualização do ponteiro [.afr/current_task](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/.afr/current_task) apontando para a `task-001`.
+- **Decisões Tomadas:**
+  - Garantir isolamento em cada tarefa com Allowlist estrita de leitura e escrita.
+- **Próximos Passos:**
+  - Iniciar a execução da Task 1 pelo ciclo TDD (escrever teste que falha em `tests/unit/scoresheetTypes.test.ts`, implementar código mínimo e validar).
+
+## [2026-10-09] Brainstorming e Refinamento de Requisitos: Controle de Súmula para Juízes
+- **Objetivo da Sessão:** Conduzir o brainstorming formal da skill `afr-superpowers:brainstorming` para definir escopo, contratos e fluxos da súmula de arbitragem dos juízes.
+- **Vínculo à Task:** FEAT-2026-10-002 (Controle de Súmula para Juízes - Brainstorming)
+- **Atividades Realizadas:**
+  - Análise dos requisitos definidos pelo usuário: registro de autores de gols (artilharia) e cartões baseados nos atletas da aba Times (por número ou número + nome), horários oficiais das partidas mantidos, observações livres da arbitragem sem necessidade de aprovação formal, criação de aba dedicada "Súmula" no aplicativo e inclusão dos dados no relatório PDF e mensagem de WhatsApp com seleção de destino.
+  - Definição das regras de negócio pelo usuário:
+    - **Regra de Cartões:** 2 cartões amarelos acumulados em jogos distintos geram suspensão de 1 partida; cartão vermelho direto ou 2 amarelos no mesmo jogo geram suspensão automática de 1 partida.
+    - **Sincronização Condicional de Placares:** Se a súmula da partida for preenchida, o placar na aba Jogos é alimentado automaticamente pelos gols da súmula; se não houver súmula registrada, o placar manual na aba Jogos permanece livremente editável.
+    - **Exportação & Compartilhamento:** Compartilhamento WhatsApp modular com 3 formatos (Artilharia & Cartões, Classificação & Mata-Mata, e Suspensão por Rodadas); PDF consolidado contendo relatório completo (Classificação, Mata-Mata, Artilharia, Cartões, Suspensões e Súmulas).
+  - Estruturação do Design Técnico de Dados, Componentes e Fluxos para validação.
+- **Decisões Tomadas:**
+  - Adoção da Abordagem 1 customizada com sincronização condicional e suspensão com acúmulo de 2 amarelos.
+- **Próximos Passos:**
+  - Apresentar o design estruturado para aprovação do usuário e, após aprovado, formalizar a especificação de feature em `.afr/features/` via `afr-planning:feature-spec-generator`.
+
+## [2026-10-09] Inicialização da Branch de Trabalho e Preferências Git para Controle de Súmula dos Juízes
+- **Objetivo da Sessão:** Atender ao comando de abertura de sessão da pipeline AFR (`/using-afr-superpowers`), executar o checklist `session-start.md`, validar a sanidade do projeto (testes e build limpos), inicializar o arquivo de preferências git canônico `.afr/git-preferences.md` e criar a branch de trabalho dedicada `feat/controle-sumula-juizes` para inclusão do controle de súmula para os juízes.
+- **Vínculo à Task:** FEAT-2026-10-002 (Controle de Súmula para Juízes - Preparação & Branch)
+- **Atividades Realizadas:**
+  - Verificação de git status e sincronização da branch `main` com o remoto (`origin/main`).
+  - Execução da suíte completa de testes automatizados com Vitest (41/41 testes aprovados com sucesso).
+  - Configuração do arquivo canônico `.afr/git-preferences.md` com convenções AFR (Conventional Commits em pt-BR, branch base/destino `main`, autor André Ribeiro).
+  - Criação e ativação da nova branch de trabalho `feat/controle-sumula-juizes`.
+- **Decisões Tomadas:**
+  - Adotar a nomenclatura canônica `feat/controle-sumula-juizes` alinhada aos padrões AFR (`feat/<nome-curto>`).
+- **Próximos Passos:**
+  - Iniciar a fase de Brainstorming e especificação Feature First em `.afr/features/` para detalhar os requisitos da súmula de arbitragem (cartões amarelo/vermelho, autores dos gols por atleta, tempos de jogo, observações e eventual impacto na artilharia e classificação).
 
 ## [2026-10-09] Estruturação PWA iOS 100% Offline e Pipeline GitHub Pages (HTTPS Gratuito)
 - **Objetivo da Sessão:** Estruturar a página web para operação perfeita no iOS (iPhone / Safari) como PWA adicionado à Tela de Início em modo standalone (tela cheia sem barras), mantendo proposta 100% offline com persistência local direta no aparelho (`localStorage`), suporte a Web Share API para exportar backup e workflow de deploy automático contínuo via GitHub Actions no GitHub Pages com HTTPS seguro e custo zero.
