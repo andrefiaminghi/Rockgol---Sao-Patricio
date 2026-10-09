@@ -5,6 +5,22 @@ project: "Rockgol - São Patrício"
 
 # Histórico de Sessões — Rockgol - São Patrício
 
+## [2026-10-09] Ajuste de Usabilidade Mobile: Distribuição das Rodadas da Súmula em Grade de 2 Linhas
+- **Objetivo da Sessão:** Atender à solicitação de usabilidade do usuário para eliminar a necessidade de rolagem horizontal na seleção de rodadas na aba "Súmula", organizando os 12 seletores em duas linhas visíveis simultaneamente.
+- **Vínculo à Task:** FEAT-2026-10-002 (Refinamento de UI/UX Mobile)
+- **Atividades Realizadas:**
+  - Substituição do contêiner `flex overflow-x-auto` por uma grade responsiva `grid grid-cols-6 gap-1.5 sm:gap-2` no [src/components/ScoresheetTab.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/ScoresheetTab.tsx).
+  - Distribuição exata dos 12 seletores em 2 linhas:
+    - Linha 1: R1, R2, R3, R4, R5, R6
+    - Linha 2: R7, R8, R9, R10, R11, Mata-Mata
+  - Execução e aprovação de 100% dos testes unitários (62/62 testes passando no Vitest).
+  - Validação de compilação e build de produção (`npm run build`) sem erros.
+  - Commit atômico realizado: `aea9841 fix(ui): distribuir seletores de rodada da sumula em 2 linhas sem scroll horizontal`.
+- **Decisões Tomadas:**
+  - Adotar `grid-cols-6` para que os 12 botões de rodada fiquem perfeitamente balanceados (6 em cada linha), acessíveis com toque direto sem deslizar horizontalmente.
+- **Próximos Passos:**
+  - Notificar o usuário que a alteração já está aplicada e ativa no ambiente local.
+
 ## [2026-10-09] Conclusão da Esteira TDD: Módulo Completo de Súmula, Artilharia, Disciplina e Exportações
 - **Objetivo da Sessão:** Executar rigorosamente o ciclo TDD (Red-Green-Refactor) para implementar o módulo completo de Controle de Súmula para Árbitros e Juízes no aplicativo do RockGol São Patrício 2026, concluindo as 6 tarefas atômicas do plano `plan-2026-10-09-002`.
 - **Vínculo à Task:** FEAT-2026-10-002 (`status: COMPLETED`), Plano `plan-2026-10-09-002` (`status: DONE`), Tasks `task-001` a `task-006` (`status: DONE`).
@@ -22,7 +38,7 @@ project: "Rockgol - São Patrício"
 - **Próximos Passos:**
   - Apresentar a conclusão da feature ao usuário para validação e homologação.
 
-- **Objetivo da Sessão:** Cumprir o fluxo da esteira AFR após a aprovação do design pelo usuário, formalizando a especificação da feature, o plano técnico de implementação e a decomposição em 6 tarefas atômicas para execução disciplinada via TDD.
+## [2026-10-09] Formalização da Tríade Canônica AFR: Spec, Plano e Tarefas Atômicas da Súmula
 - **Vínculo à Task:** FEAT-2026-10-002, Plano `plan-2026-10-09-002`, Tasks `task-001` a `task-006`.
 - **Atividades Realizadas:**
   - Criação da especificação formal [.afr/features/controle-sumula-juizes.md](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/.afr/features/controle-sumula-juizes.md) com User Story, contratos de dados em código TypeScript, 5 invariantes numeradas (`INV-01` a `INV-05`), 5 critérios BDD estritos (`AC-001` a `AC-005`), casos negativos e exclusões de escopo.
