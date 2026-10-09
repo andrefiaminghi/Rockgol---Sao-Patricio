@@ -97,14 +97,22 @@ export function getTopScorers(
       const team = teams.find(t => t.id === goal.teamId);
       const teamName = team ? team.name : goal.teamId;
 
+      const rawPlayerName = team?.players[goal.playerIndex]?.trim();
+      const playerName = rawPlayerName
+        ? `#${goal.playerIndex + 1} ${rawPlayerName}`
+        : (goal.playerName || `#${goal.playerIndex + 1}`);
+
       if (!scorersMap[key]) {
         scorersMap[key] = {
           teamId: goal.teamId,
           teamName,
           playerIndex: goal.playerIndex,
-          playerName: goal.playerName,
+          playerName,
           goals: 0
         };
+      } else {
+        scorersMap[key].playerName = playerName;
+        scorersMap[key].teamName = teamName;
       }
       scorersMap[key].goals += 1;
     });

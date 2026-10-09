@@ -176,6 +176,36 @@ describe('ScoresheetService — Regras de Negócio, Sincronização e Disciplina
       expect(scorers[1].goals).toBe(2);
       expect(scorers[1].teamName).toBe('Bordogos');
     });
+
+    it('deve utilizar o nome do jogador cadastrado na aba Times mesmo se o gol tiver apenas o número salvo', () => {
+      const teamsWithNames: Team[] = [
+        { id: 'team-1', name: 'Bordogos', players: ['Romário', '', 'Ronaldo'] }
+      ];
+
+      const scoresheets: Record<string, MatchScoresheet> = {
+        'match-1': {
+          matchId: 'match-1',
+          hasScoresheet: true,
+          goals: [
+            { id: 'g1', teamId: 'team-1', playerIndex: 0, playerName: '#1' },
+            { id: 'g2', teamId: 'team-1', playerIndex: 2, playerName: '#3' },
+            { id: 'g3', teamId: 'team-1', playerIndex: 1, playerName: '#2' }
+          ],
+          cards: [],
+          observations: '',
+          updatedAt: new Date().toISOString()
+        }
+      };
+
+      const scorers = getTopScorers(teamsWithNames, scoresheets);
+      const romario = scorers.find(s => s.playerIndex === 0)!;
+      const ronaldo = scorers.find(s => s.playerIndex === 2)!;
+      const semNome = scorers.find(s => s.playerIndex === 1)!;
+
+      expect(romario.playerName).toBe('#1 Romário');
+      expect(ronaldo.playerName).toBe('#3 Ronaldo');
+      expect(semNome.playerName).toBe('#2');
+    });
   });
 
   describe('3. Disciplina & Cálculo de Suspensões (getSuspensions e isPlayerSuspended)', () => {

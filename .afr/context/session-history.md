@@ -5,6 +5,19 @@ project: "Rockgol - São Patrício"
 
 # Histórico de Sessões — Rockgol - São Patrício
 
+## [2026-10-09] Identificação de Fases Mata-Mata, Pênaltis na Súmula e Nomes de Jogadores na Artilharia
+- **Objetivo da Sessão:** Atender a três demandas de UI/domínio na aba Súmula:
+  1. Identificação explícita de fase nos cards de mata-mata ("Semifinal 1/2", "Disputa de 3º e 4º Lugar", "Grande Final");
+  2. Exibição do placar de pênaltis nos cards de mata-mata da aba Súmula quando houver decisão por penalidades;
+  3. Resolução dinâmica dos nomes dos jogadores na lista de Artilharia a partir dos nomes preenchidos na aba Times.
+- **Vínculo à Task:** FEAT-2026-10-002 (Refinamento de UI/UX e Domínio da Súmula)
+- **Atividades Realizadas:**
+  - **Identificação de Fase no Card Mata-Mata:** Em [src/components/ScoresheetTab.tsx](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/components/ScoresheetTab.tsx), adicionados badges de destaque para "🏆 Grande Final", "🥉 Disputa de 3º e 4º Lugar" e "⚔️ Semifinal 1/2" com estilo visual dedicado.
+  - **Exibição de Pênaltis:** Adicionada exibição tabular de penalidades `({pen} pen)` ao lado do nome dos times e banner centralizado de decisão por pênaltis no card de confronto de mata-mata na aba Súmula.
+  - **Resolução Dinâmica de Nomes na Artilharia:** Atualizado `getTopScorers` em [src/services/scoresheetService.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/src/services/scoresheetService.ts) para consultar dinamicamente `team.players[playerIndex]`, garantindo que nomes preenchidos na aba Times apareçam na Artilharia, no resumo de gols da partida e nas exportações.
+  - **Testes Automatizados:** Adicionado teste unitário em [tests/unit/scoresheetService.test.ts](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetService.test.ts) validando a resolução do nome do jogador cadastrado na aba Times.
+  - **Verificação Completa:** 67/67 testes aprovados no Vitest (`npm test`) e build de produção (`npm run build`) executado com sucesso.
+
 ## [2026-10-09] Limpeza de Súmula e Zeramento Completo de Placares (Aba Súmula e Aba Jogos)
 - **Objetivo da Sessão:** Atender à solicitação de que, ao limpar/remover uma súmula, os placares da partida correspondente sejam imediatamente zerados (voltando ao estado pendente `- × -`) tanto na lista de partidas da aba Súmula quanto nos campos da aba Jogos e na tabela de classificação/mata-mata.
 - **Vínculo à Task:** FEAT-2026-10-002 (Limpeza de Súmula e Integridade de Estado)

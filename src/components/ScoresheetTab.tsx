@@ -180,13 +180,51 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
               const sheet = scoresheets[m.id];
               const hasSheet = Boolean(sheet && sheet.hasScoresheet);
 
+              const isKnockout = selectedRound === 'mata-mata' || !('roundNumber' in m);
               const matchTime = 'roundTime' in m ? m.roundTime : m.time;
+
+              // Identificação do título / fase do mata-mata
+              const knockoutPhaseTitle = isKnockout
+                ? m.id === 'final'
+                  ? 'Grande Final'
+                  : m.id === 'third_place'
+                  ? 'Disputa de 3º e 4º Lugar'
+                  : m.id === 'sf1'
+                  ? 'Semifinal 1'
+                  : m.id === 'sf2'
+                  ? 'Semifinal 2'
+                  : ('title' in m ? m.title : 'Mata-Mata')
+                : null;
 
               return (
                 <div
                   key={m.id}
                   className="bg-[#1C2127] border border-[#2F343C] rounded-2xl p-3.5 hover:border-[#383E47] transition-all shadow-md"
                 >
+                  {/* Identificação de Fase para Mata-Mata */}
+                  {isKnockout && (
+                    <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-[#2F343C]">
+                      <div className="flex items-center gap-2">
+                        {m.id === 'final' ? (
+                          <span className="text-xs font-black uppercase tracking-wider text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 rounded-lg flex items-center gap-1.5 shadow-sm">
+                            🏆 Grande Final
+                          </span>
+                        ) : m.id === 'third_place' ? (
+                          <span className="text-xs font-bold uppercase tracking-wider text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-lg flex items-center gap-1.5">
+                            🥉 Disputa de 3º e 4º Lugar
+                          </span>
+                        ) : (
+                          <span className="text-xs font-bold uppercase tracking-wider text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2.5 py-0.5 rounded-lg flex items-center gap-1.5">
+                            ⚔️ {knockoutPhaseTitle}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-semibold text-[#8F99A8] uppercase tracking-wider">
+                        Fase Eliminatória
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between text-xs text-[#8F99A8] mb-2">
                     <div className="flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-[#00D26A]" />
@@ -210,9 +248,16 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
                   {/* Confronto e Placares */}
                   <div className="flex items-center justify-between py-1">
                     <div className="flex-1 flex items-center justify-between pr-3">
-                      <span className="text-xs sm:text-sm font-bold text-white truncate max-w-[120px] sm:max-w-[150px]">
-                        {homeTeam ? homeTeam.name : 'A definir'}
-                      </span>
+                      <div className="min-w-0">
+                        <span className="text-xs sm:text-sm font-bold text-white truncate max-w-[120px] sm:max-w-[150px] block">
+                          {homeTeam ? homeTeam.name : 'A definir'}
+                        </span>
+                        {isKnockout && 'homePenalties' in m && m.homePenalties !== null && (
+                          <span className="block text-[10px] text-[#D99B00] font-bold">
+                            ({m.homePenalties} pen)
+                          </span>
+                        )}
+                      </div>
                       <span className="text-base font-black text-white ml-2 bg-[#14181D] px-2 py-0.5 rounded border border-[#2F343C]">
                         {m.homeScore !== null ? m.homeScore : '-'}
                       </span>
@@ -224,11 +269,32 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
                       <span className="text-base font-black text-white mr-2 bg-[#14181D] px-2 py-0.5 rounded border border-[#2F343C]">
                         {m.awayScore !== null ? m.awayScore : '-'}
                       </span>
-                      <span className="text-xs sm:text-sm font-bold text-white truncate max-w-[120px] sm:max-w-[150px] text-right">
-                        {awayTeam ? awayTeam.name : 'A definir'}
-                      </span>
+                      <div className="min-w-0 text-right">
+                        <span className="text-xs sm:text-sm font-bold text-white truncate max-w-[120px] sm:max-w-[150px] block">
+                          {awayTeam ? awayTeam.name : 'A definir'}
+                        </span>
+                        {isKnockout && 'awayPenalties' in m && m.awayPenalties !== null && (
+                          <span className="block text-[10px] text-[#D99B00] font-bold">
+                            ({m.awayPenalties} pen)
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
+
+                  {/* Destaque de Pênaltis no Card para Mata-Mata */}
+                  {isKnockout &&
+                    'homePenalties' in m &&
+                    'awayPenalties' in m &&
+                    m.homePenalties !== null &&
+                    m.awayPenalties !== null && (
+                      <div className="my-2 py-1 px-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center justify-center gap-2 text-xs font-bold text-amber-300">
+                        <span>⚖️ Decisão por Pênaltis:</span>
+                        <span className="text-white bg-[#14181D] px-2 py-0.5 rounded border border-amber-500/30">
+                          {homeTeam?.name || 'Mandante'} {m.homePenalties} × {m.awayPenalties} {awayTeam?.name || 'Visitante'}
+                        </span>
+                      </div>
+                    )}
 
                   {/* Resumo da Súmula se houver */}
                   {hasSheet && sheet && (
@@ -237,7 +303,14 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
                         <div className="flex items-start gap-1">
                           <span className="shrink-0">⚽</span>
                           <span className="text-white truncate">
-                            {sheet.goals.map(g => `${g.playerName}${g.isOwnGoal ? ' (GC)' : ''}`).join(', ')}
+                            {sheet.goals
+                              .map(g => {
+                                if (g.isOwnGoal) return 'Gol Contra (GC)';
+                                const team = teamMap.get(g.teamId);
+                                const rawName = g.playerIndex !== null ? team?.players[g.playerIndex]?.trim() : null;
+                                return rawName ? `#${g.playerIndex! + 1} ${rawName}` : g.playerName;
+                              })
+                              .join(', ')}
                           </span>
                         </div>
                       )}
@@ -245,13 +318,20 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
                         <div className="flex items-start gap-1">
                           <span className="shrink-0">🟨</span>
                           <span className="truncate">
-                            {sheet.cards.map(c => `${c.cardType === 'RED' ? '🟥' : '🟨'} ${c.playerName}`).join(', ')}
+                            {sheet.cards
+                              .map(c => {
+                                const team = teamMap.get(c.teamId);
+                                const rawName = team?.players[c.playerIndex]?.trim();
+                                const name = rawName ? `#${c.playerIndex + 1} ${rawName}` : c.playerName;
+                                return `${c.cardType === 'RED' ? '🟥' : '🟨'} ${name}`;
+                              })
+                              .join(', ')}
                           </span>
                         </div>
                       )}
                       {sheet.observations && (
                         <p className="italic text-[#8F99A8]/80 line-clamp-1">
-                          "{sheet.observations}"
+                          "${sheet.observations}"
                         </p>
                       )}
                     </div>
