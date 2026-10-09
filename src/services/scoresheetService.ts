@@ -254,8 +254,38 @@ export function isPlayerSuspended(
 }
 
 /**
+ * Verifica se a súmula de uma partida pode ser excluída.
+ * Regra: se houver qualquer súmula registrada na fase mata-mata ('sf1', 'sf2', 'third_place', 'final'),
+ * não é permitido limpar registros da fase de grupos (rodadas R1 ao R11).
+ */
+export function canDeleteScoresheet(
+  matchId: string,
+  scoresheets: Record<string, MatchScoresheet>
+): { canDelete: boolean; reason?: string } {
+  const isKnockoutMatch = ['sf1', 'sf2', 'third_place', 'final'].includes(matchId);
+  if (isKnockoutMatch) {
+    return { canDelete: true };
+  }
+
+  const hasKnockoutScoresheets = ['sf1', 'sf2', 'third_place', 'final'].some(
+    id => Boolean(scoresheets[id]?.hasScoresheet)
+  );
+
+  if (hasKnockoutScoresheets) {
+    return {
+      canDelete: false,
+      reason:
+        'Não é permitido limpar súmulas da fase de grupos (R1 ao R11) enquanto houver registros de súmula na fase mata-mata. Exclua primeiro as súmulas do mata-mata.'
+    };
+  }
+
+  return { canDelete: true };
+}
+
+/**
  * Remove a súmula da partida informada e reseta seus placares tanto na fase de grupos quanto no mata-mata,
  * recalculando o chaveamento das etapas seguintes.
+ * Se houver súmulas registradas no mata-mata, bloqueia a remoção de partidas da fase de grupos.
  */
 export function removeScoresheetAndResetMatch(
   matchId: string,
@@ -267,6 +297,11 @@ export function removeScoresheetAndResetMatch(
   knockoutMatches: KnockoutMatch[];
   scoresheets: Record<string, MatchScoresheet>;
 } {
+  const check = canDeleteScoresheet(matchId, scoresheets);
+  if (!check.canDelete) {
+    return { matches, knockoutMatches, scoresheets };
+  }
+
   const updatedSheets = { ...scoresheets };
   delete updatedSheets[matchId];
 

@@ -1,9 +1,31 @@
 ---
-last_updated: "2026-10-09T16:13:00-03:00"
+last_updated: "2026-10-09T17:15:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
+
+## [2026-10-09] Exclusão de Súmula no Supabase e Trava de Limpeza da Fase de Grupos vs Mata-Mata
+- **Objetivo da Sessão:** Atender à solicitação de:
+  1. Ao limpar um registro de partida na súmula, excluir o registro correspondente do banco de dados Supabase (`deleteScoresheetFromSupabase`), além de zerar os placares locais na súmula e na aba Jogos.
+  2. Ao registrar qualquer súmula na fase mata-mata (`sf1`, `sf2`, `third_place`, `final`), bloquear rigorosamente a limpeza de registros das rodadas R1 ao R11 (fase de grupos). Só permitir limpar R1 a R11 se não houver registros de súmula ativos no mata-mata.
+- **Vínculo ao Plano:** Plan `plan-2026-10-09-004` (Tasks 1 a 3)
+- **Atividades Realizadas:**
+  - **Serviço de Súmula (`scoresheetService.ts`):**
+    - Implementada função determinística `canDeleteScoresheet(matchId, scoresheets)` que verifica se a partida pertence ao mata-mata (sempre liberada) ou à fase de grupos (bloqueada se `hasKnockoutScoresheets` for true).
+    - Integrada a trava de proteção em `removeScoresheetAndResetMatch`, impedindo qualquer mutação de estado se a regra for violada.
+  - **Interface da Súmula (`ScoresheetTab.tsx`):**
+    - Adicionado banner de alerta no topo da listagem de rodadas de grupos (R1 ao R11) quando houver partidas do mata-mata registradas (`🔒 Súmulas da Fase de Grupos Bloqueadas para Limpeza`).
+    - Botão "Limpar" nos cards da fase de grupos estilizado como "Bloqueado" com estilo desabilitado e tooltip explicativo quando o mata-mata estiver em andamento.
+    - Atualizada a mensagem de confirmação para informar que o registro será excluído do banco de dados.
+  - **Integração Principal (`App.tsx`):**
+    - `handleDeleteScoresheet` atualizado para validar com `canDeleteScoresheet` e disparar toast explicativo caso bloqueado.
+    - Chamada assíncrona para `deleteScoresheetFromSupabase(matchId)` quando o usuário estiver no perfil de arbitragem (`role === 'juiz'`), exibindo feedback visual ("Súmula excluída do banco com sucesso!").
+  - **Testes Automatizados:**
+    - [`tests/unit/scoresheetService.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetService.test.ts): 6 novos testes cobrindo todas as variações de bloqueio e liberação.
+    - [`tests/unit/scoresheetTab.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetTab.test.ts): testes de conformidade de props e renderização.
+    - [`tests/unit/scoresheetIntegration.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetIntegration.test.ts): teste de ponta a ponta validando o bloqueio de R1-R11, liberação do mata-mata e posterior liberação de R1-R11 após esvaziamento.
+  - **Verificação:** 100/100 testes aprovados no Vitest (`npm test`) e compilação de produção (`npm run build`) validada sem erros.
 
 ## [2026-10-09] Reset de Placares Manuais na Sincronização (Preservando Somente Dados do Servidor)
 - **Objetivo da Sessão:** Atender à solicitação de que, ao sincronizar o aplicativo (Supabase), qualquer placar preenchido manualmente ou simulado localmente na aba Jogos seja resetado, mantendo estritamente os placares com súmula oficial registrada no servidor.

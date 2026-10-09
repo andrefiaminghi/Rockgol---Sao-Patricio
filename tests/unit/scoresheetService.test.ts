@@ -3,7 +3,9 @@ import {
   syncMatchScoresFromScoresheets,
   getTopScorers,
   getSuspensions,
-  isPlayerSuspended
+  isPlayerSuspended,
+  canDeleteScoresheet,
+  removeScoresheetAndResetMatch
 } from '../../src/services/scoresheetService';
 import { Match, KnockoutMatch, Team, MatchScoresheet } from '../../src/types/tournament';
 
@@ -319,4 +321,172 @@ describe('ScoresheetService — Regras de Negócio, Sincronização e Disciplina
       expect(suspensions[0].suspendedForRoundNumber).toBe(2);
     });
   });
+
+  describe('4. Exclusão de Súmula e Bloqueio da Fase de Grupos vs Mata-Mata', () => {
+    it('deve permitir excluir súmula da fase de grupos (R1 ao R11) quando NÃO houver súmulas no mata-mata', () => {
+      const scoresheets: Record<string, MatchScoresheet> = {
+        'match-1': {
+          matchId: 'match-1',
+          hasScoresheet: true,
+          goals: [],
+          cards: [],
+          observations: '',
+          updatedAt: new Date().toISOString()
+        }
+      };
+
+      const result = canDeleteScoresheet('match-1', scoresheets);
+      expect(result.canDelete).toBe(true);
+      expect(result.reason).toBeUndefined();
+    });
+
+    it('deve BLOQUEAR a exclusão de súmula da fase de grupos quando houver qualquer súmula no mata-mata (sf1, sf2, third_place, final)', () => {
+      const scoresheetsWithSf1: Record<string, MatchScoresheet> = {
+        'match-1': {
+          matchId: 'match-1',
+          hasScoresheet: true,
+          goals: [],
+          cards: [],
+          observations: '',
+          updatedAt: new Date().toISOString()
+        },
+        sf1: {
+          matchId: 'sf1',
+          hasScoresheet: true,
+          goals: [],
+          cards: [],
+          observations: '',
+          updatedAt: new Date().toISOString()
+        }
+      };
+
+      const checkMatch1 = canDeleteScoresheet('match-1', scoresheetsWithSf1);
+      expect(checkMatch1.canDelete).toBe(false);
+      expect(checkMatch1.reason).toContain('Não é permitido limpar súmulas da fase de grupos');
+
+      // Testando com a grande final
+      const scoresheetsWithFinal: Record<string, MatchScoresheet> = {
+        'match-2': {
+          matchId: 'match-2',
+          hasScoresheet: true,
+          goals: [],
+          cards: [],
+          observations: '',
+          updatedAt: new Date().toISOString()
+        },
+        final: {
+          matchId: 'final',
+          hasScoresheet: true,
+          goals: [],
+          cards: [],
+          observations: '',
+          updatedAt: new Date().toISOString()
+        }
+      };
+
+      const checkMatch2 = canDeleteScoresheet('match-2', scoresheetsWithFinal);
+      expect(checkMatch2.canDelete).toBe(false);
+      expect(checkMatch2.reason).toContain('mata-mata');
+    });
+
+    it('deve SEMPRE permitir excluir súmulas de partidas do próprio mata-mata', () => {
+      const scoresheets: Record<string, MatchScoresheet> = {
+        sf1: {
+          matchId: 'sf1',
+          hasScoresheet: true,
+          goals: [],
+          cards: [],
+          observations: '',
+          updatedAt: new Date().toISOString()
+        },
+        final: {
+          matchId: 'final',
+          hasScoresheet: true,
+          goals: [],
+          cards: [],
+          observations: '',
+          updatedAt: new Date().toISOString()
+        }
+      };
+
+      expect(canDeleteScoresheet('sf1', scoresheets).canDelete).toBe(true);
+      expect(canDeleteScoresheet('sf2', scoresheets).canDelete).toBe(true);
+      expect(canDeleteScoresheet('third_place', scoresheets).canDelete).toBe(true);
+      expect(canDeleteScoresheet('final', scoresheets).canDelete).toBe(true);
+    });
+
+    it('deve LIBERAR a exclusão de súmulas da fase de grupos assim que todas as súmulas do mata-mata forem removidas', () => {
+      const scoresheets: Record<string, MatchScoresheet> = {
+        'match-1': {
+          matchId: 'match-1',
+          hasScoresheet: true,
+          goals: [],
+          cards: [],
+          observations: '',
+          updatedAt: new Date().toISOString()
+        },
+        // Mata-mata sem hasScoresheet (ou já excluído)
+        sf1: {
+          matchId: 'sf1',
+          hasScoresheet: false,
+          goals: [],
+          cards: [],
+          observations: '',
+          updatedAt: new Date().toISOString()
+        }
+      };
+
+      const result = canDeleteScoresheet('match-1', scoresheets);
+      expect(result.canDelete).toBe(true);
+    });
+
+    it('removeScoresheetAndResetMatch não deve alterar nada se canDelete for falso', () => {
+      const scoresheets: Record<string, MatchScoresheet> = {
+        'match-1': {
+          matchId: 'match-1',
+          hasScoresheet: true,
+          goals: [],
+          cards: [],
+          observations: '',
+          updatedAt: new Date().toISOString()
+        },
+        sf1: {
+          matchId: 'sf1',
+          hasScoresheet: true,
+          goals: [],
+          cards: [],
+          observations: '',
+          updatedAt: new Date().toISOString()
+        }
+      };
+
+      const beforeMatches = [...mockMatches];
+      const res = removeScoresheetAndResetMatch('match-1', beforeMatches, mockKnockoutMatches, scoresheets);
+
+      // Deve manter exatamente a súmula
+      expect(res.scoresheets['match-1']).toBeDefined();
+      expect(res.scoresheets['match-1'].hasScoresheet).toBe(true);
+    });
+
+    it('removeScoresheetAndResetMatch deve zerar placar e remover súmula quando permitido', () => {
+      const scoresheets: Record<string, MatchScoresheet> = {
+        'match-1': {
+          matchId: 'match-1',
+          hasScoresheet: true,
+          goals: [{ id: 'g1', teamId: 'team-1', playerIndex: 0, playerName: 'J1' }],
+          cards: [],
+          observations: '',
+          updatedAt: new Date().toISOString()
+        }
+      };
+
+      const res = removeScoresheetAndResetMatch('match-1', mockMatches, mockKnockoutMatches, scoresheets);
+      expect(res.scoresheets['match-1']).toBeUndefined();
+      const match1 = res.matches.find(m => m.id === 'match-1');
+      expect(match1?.homeScore).toBeNull();
+      expect(match1?.awayScore).toBeNull();
+      expect(match1?.status).toBe('PENDING');
+    });
+  });
 });
+

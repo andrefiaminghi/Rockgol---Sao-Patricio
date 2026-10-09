@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import React from 'react';
 import { ScoresheetTab } from '../../src/components/ScoresheetTab';
-import { Team, Match, MatchScoresheet } from '../../src/types/tournament';
+import { Team, Match, MatchScoresheet, KnockoutMatch } from '../../src/types/tournament';
 
 describe('ScoresheetTab Componente e Resumo Bilateral de Súmula', () => {
   const dummyTeams: Team[] = [
@@ -64,4 +64,50 @@ describe('ScoresheetTab Componente e Resumo Bilateral de Súmula', () => {
     expect(element.props.scoresheets['m1'].goals.length).toBe(3);
     expect(element.props.scoresheets['m1'].cards.length).toBe(2);
   });
+
+  it('deve receber e renderizar sem erros quando há partidas e súmulas no mata-mata', () => {
+    const scoresheetsWithKnockout: Record<string, MatchScoresheet> = {
+      ...dummyScoresheets,
+      sf1: {
+        matchId: 'sf1',
+        hasScoresheet: true,
+        goals: [],
+        cards: [],
+        observations: '',
+        updatedAt: '2026-10-09T18:00:00Z'
+      }
+    };
+
+    const dummyKnockoutMatches: KnockoutMatch[] = [
+      {
+        id: 'sf1',
+        title: 'Semifinal 1',
+        field: 'Campo 1',
+        time: '14:00',
+        homeTeamId: 'team_a',
+        awayTeamId: 'team_b',
+        homeScore: 1,
+        awayScore: 0,
+        homePenalties: null,
+        awayPenalties: null,
+        winnerTeamId: 'team_a',
+        loserTeamId: 'team_b',
+        status: 'FINISHED'
+      }
+    ];
+
+    const element = React.createElement(ScoresheetTab, {
+      teams: dummyTeams,
+      matches: dummyMatches,
+      knockoutMatches: dummyKnockoutMatches,
+      scoresheets: scoresheetsWithKnockout,
+      readOnly: false,
+      onSaveScoresheet: () => {},
+      onDeleteScoresheet: () => {}
+    });
+
+    expect(element).toBeDefined();
+    expect((element.props as any).scoresheets['sf1'].hasScoresheet).toBe(true);
+  });
 });
+

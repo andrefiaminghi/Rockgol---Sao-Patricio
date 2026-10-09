@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { syncMatchScoresFromScoresheets, removeScoresheetAndResetMatch } from '../../src/services/scoresheetService';
+import {
+  syncMatchScoresFromScoresheets,
+  removeScoresheetAndResetMatch,
+  canDeleteScoresheet
+} from '../../src/services/scoresheetService';
 import { calculateStandings } from '../../src/services/standingsService';
 import { MatchScoresheet, TournamentState, KnockoutMatch } from '../../src/types/tournament';
 import { createDefaultTournamentState } from '../../src/services/storageService';
@@ -473,5 +477,79 @@ describe('Integração de Súmula e Estado Global', () => {
     const otherMatch = defaultState.matches[1];
     expect(canEditScore(otherMatch.id)).toBe(true);
   });
+
+  it('deve garantir que nenhuma súmula da fase de grupos possa ser limpa enquanto houver súmula no mata-mata', () => {
+    const groupMatch = defaultState.matches[0];
+    const groupSheet: MatchScoresheet = {
+      matchId: groupMatch.id,
+      hasScoresheet: true,
+      goals: [{ id: 'g1', teamId: groupMatch.homeTeamId, playerIndex: 0, playerName: 'Atleta A' }],
+      cards: [],
+      observations: '',
+      updatedAt: new Date().toISOString()
+    };
+
+    const knockoutSheet: MatchScoresheet = {
+      matchId: 'sf1',
+      hasScoresheet: true,
+      goals: [{ id: 'g2', teamId: defaultState.teams[0].id, playerIndex: 1, playerName: 'Atleta B' }],
+      cards: [],
+      observations: '',
+      updatedAt: new Date().toISOString()
+    };
+
+    let stateWithBoth: TournamentState = {
+      ...defaultState,
+      scoresheets: {
+        [groupMatch.id]: groupSheet,
+        sf1: knockoutSheet
+      }
+    };
+
+    // 1. Tentar limpar partida de grupos: deve ser bloqueado
+    const checkGroup = canDeleteScoresheet(groupMatch.id, stateWithBoth.scoresheets);
+    expect(checkGroup.canDelete).toBe(false);
+    expect(checkGroup.reason).toContain('Não é permitido limpar súmulas da fase de grupos');
+
+    // 2. Executar remoção no estado com bloqueio: deve preservar intacta a súmula
+    const blockedResult = removeScoresheetAndResetMatch(
+      groupMatch.id,
+      stateWithBoth.matches,
+      stateWithBoth.knockoutMatches,
+      stateWithBoth.scoresheets
+    );
+    expect(blockedResult.scoresheets[groupMatch.id]).toBeDefined();
+    expect(blockedResult.scoresheets[groupMatch.id].hasScoresheet).toBe(true);
+
+    // 3. Tentar limpar a semifinal: deve ser permitido
+    const checkKnockout = canDeleteScoresheet('sf1', stateWithBoth.scoresheets);
+    expect(checkKnockout.canDelete).toBe(true);
+
+    // 4. Limpar a semifinal do estado
+    const clearedKnockoutResult = removeScoresheetAndResetMatch(
+      'sf1',
+      stateWithBoth.matches,
+      stateWithBoth.knockoutMatches,
+      stateWithBoth.scoresheets
+    );
+    expect(clearedKnockoutResult.scoresheets['sf1']).toBeUndefined();
+
+    // 5. Agora que o mata-mata está limpo, a partida da fase de grupos pode ser limpa!
+    const checkGroupAfter = canDeleteScoresheet(groupMatch.id, clearedKnockoutResult.scoresheets);
+    expect(checkGroupAfter.canDelete).toBe(true);
+
+    const clearedGroupResult = removeScoresheetAndResetMatch(
+      groupMatch.id,
+      clearedKnockoutResult.matches,
+      clearedKnockoutResult.knockoutMatches,
+      clearedKnockoutResult.scoresheets
+    );
+    expect(clearedGroupResult.scoresheets[groupMatch.id]).toBeUndefined();
+    const finalGroupMatch = clearedGroupResult.matches.find(m => m.id === groupMatch.id)!;
+    expect(finalGroupMatch.homeScore).toBeNull();
+    expect(finalGroupMatch.awayScore).toBeNull();
+    expect(finalGroupMatch.status).toBe('PENDING');
+  });
 });
+
 

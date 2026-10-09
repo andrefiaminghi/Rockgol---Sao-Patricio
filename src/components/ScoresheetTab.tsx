@@ -12,7 +12,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { Match, KnockoutMatch, Team, MatchScoresheet } from '../types/tournament';
-import { getTopScorers, getSuspensions } from '../services/scoresheetService';
+import { getTopScorers, getSuspensions, canDeleteScoresheet } from '../services/scoresheetService';
 import { ScoresheetModal } from './ScoresheetModal';
 
 interface ScoresheetTabProps {
@@ -65,6 +65,11 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
   }, [selectedRound, matches, knockoutMatches]);
 
   const rounds = Array.from({ length: 11 }, (_, i) => i + 1);
+
+  // Verifica se há alguma súmula ativa na fase mata-mata
+  const hasKnockoutScoresheets = useMemo(() => {
+    return ['sf1', 'sf2', 'third_place', 'final'].some(id => Boolean(scoresheets[id]?.hasScoresheet));
+  }, [scoresheets]);
 
   // Identificação dos times do modal ativo
   const modalTeams = useMemo(() => {
@@ -173,6 +178,21 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
               Mata-Mata
             </button>
           </div>
+
+          {/* Banner de bloqueio de limpeza das rodadas R1 a R11 quando há súmulas no mata-mata */}
+          {hasKnockoutScoresheets && selectedRound !== 'mata-mata' && (
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-200 flex items-start gap-2.5 shadow-sm">
+              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block text-amber-300">
+                  🔒 Súmulas da Fase de Grupos Bloqueadas para Limpeza
+                </span>
+                <span className="text-[#8F99A8] mt-0.5 block">
+                  Existem súmulas registradas na Fase Mata-Mata. Para alterar ou limpar partidas das rodadas R1 ao R11, limpe primeiro as súmulas do mata-mata.
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Lista de Partidas */}
           <div className="space-y-2.5">
@@ -415,25 +435,39 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
                   {/* Botões de Ação da Súmula (Apenas Arbitragem) */}
                   {!readOnly && (
                     <div className="mt-3 pt-2 flex items-center justify-end gap-2">
-                      {hasSheet && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (
-                              confirm(
-                                'Deseja realmente limpar a súmula desta partida? Os placares na aba Súmula e na aba Jogos serão zerados.'
-                              )
-                            ) {
-                              onDeleteScoresheet(m.id);
-                            }
-                          }}
-                          className="text-xs font-bold px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20"
-                          title="Limpar Súmula e Zerar Placar"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>Limpar</span>
-                        </button>
-                      )}
+                      {hasSheet && (() => {
+                        const deleteCheck = canDeleteScoresheet(m.id, scoresheets);
+                        const isDeleteBlocked = !deleteCheck.canDelete;
+
+                        return (
+                          <button
+                            type="button"
+                            disabled={isDeleteBlocked}
+                            onClick={() => {
+                              if (isDeleteBlocked) {
+                                alert(deleteCheck.reason || 'Limpeza bloqueada.');
+                                return;
+                              }
+                              if (
+                                confirm(
+                                  'Deseja realmente limpar a súmula desta partida? O registro será excluído do banco de dados e os placares serão zerados.'
+                                )
+                              ) {
+                                onDeleteScoresheet(m.id);
+                              }
+                            }}
+                            className={`text-xs font-bold px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 border ${
+                              isDeleteBlocked
+                                ? 'opacity-40 text-gray-400 border-gray-600 bg-gray-800/30 cursor-not-allowed'
+                                : 'text-red-400 hover:text-red-300 hover:bg-red-500/10 border-red-500/20'
+                            }`}
+                            title={isDeleteBlocked ? deleteCheck.reason : 'Limpar Súmula e Excluir do Banco'}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>{isDeleteBlocked ? 'Bloqueado' : 'Limpar'}</span>
+                          </button>
+                        );
+                      })()}
                       <button
                         type="button"
                         disabled={!homeTeam || !awayTeam}

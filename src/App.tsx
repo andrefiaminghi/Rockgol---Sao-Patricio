@@ -12,7 +12,11 @@ import {
   resolveKnockoutMatch,
   updateFinalsFromSemifinals
 } from './services/knockoutService';
-import { syncMatchScoresFromScoresheets, removeScoresheetAndResetMatch } from './services/scoresheetService';
+import {
+  syncMatchScoresFromScoresheets,
+  removeScoresheetAndResetMatch,
+  canDeleteScoresheet
+} from './services/scoresheetService';
 import {
   pushScoresheetToSupabase,
   deleteScoresheetFromSupabase,
@@ -222,13 +226,32 @@ export function App({ role = 'torcida' }: AppProps = {}) {
   };
 
   // Handler para remover/limpar súmula (zera o placar e desvincula a súmula)
-  const handleDeleteScoresheet = (matchId: string) => {
-    if (role === 'juiz') {
-      deleteScoresheetFromSupabase(matchId).catch(err => {
-        console.warn('Falha ao deletar súmula no Supabase:', err);
-      });
+  const handleDeleteScoresheet = async (matchId: string) => {
+    // 1. Validação de segurança: proíbe limpar R1 a R11 se houver súmulas registradas no mata-mata
+    const check = canDeleteScoresheet(matchId, state.scoresheets);
+    if (!check.canDelete) {
+      showToast(check.reason || 'Bloqueado: Limpe primeiro as súmulas do mata-mata.');
+      return;
     }
 
+    // 2. Se for juiz (arbitragem), deleta o registro no Supabase com feedback visual
+    if (role === 'juiz') {
+      try {
+        const res = await deleteScoresheetFromSupabase(matchId);
+        if (res.success) {
+          showToast('Súmula excluída do banco com sucesso!');
+        } else {
+          showToast('Súmula limpa localmente (aviso: erro no banco de dados).');
+        }
+      } catch (err) {
+        console.warn('Falha ao deletar súmula no Supabase:', err);
+        showToast('Súmula limpa localmente.');
+      }
+    } else {
+      showToast('Súmula limpa com sucesso!');
+    }
+
+    // 3. Reseta os placares na memória e storage
     setState(prev => {
       const { matches, knockoutMatches, scoresheets } = removeScoresheetAndResetMatch(
         matchId,
