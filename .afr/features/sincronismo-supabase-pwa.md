@@ -129,16 +129,38 @@ CREATE POLICY "Permitir escrita de times via chave pública" ON public.teams
 
 ---
 
-## 6. Critérios de Aceitação
-1. **Deploy e Build:** `npm run build` deve gerar os bundles de `index.html` e `juiz.html` sem erros de TypeScript ou Vite.
-2. **Isolamento de Perfis:**
-   - No PWA Torcida, é impossível abrir o modal de edição de súmula ou alterar elencos na aba Times.
-   - No PWA Juiz, a tela de PIN bloqueia o acesso até que `2026` seja informado corretamente.
-3. **Sincronização no Supabase:**
-   - Salvar uma súmula no PWA Juiz grava com sucesso na tabela `scoresheets` do Supabase.
-   - Clicar em "Sincronizar" no PWA Torcida baixa os dados da tabela `scoresheets` e atualiza a classificação e artilharia.
-4. **Resiliência Offline:**
-   - Se o dispositivo perder a conexão, o PWA Juiz e o PWA Torcida continuam funcionando com os dados locais do `localStorage`.
-5. **Testes Automatizados:**
-   - Testes unitários para o serviço de integração do Supabase (`supabaseService.test.ts`), simulando operações de pull, push e fallback offline.
-   - Cobertura de 100% de aprovação nos testes existentes e novos.
+## 6. Protocolo de Hard Reset no Sincronismo (Nuvem como Fonte Única de Verdade)
+
+### 6.1 Problema Resolvido
+Evitar que súmulas excluídas reapareçam ou novas súmulas sejam sobrepostas ao sincronizar no navegador do celular, garantindo que nenhum resíduo ou cache local permaneça após o sincronismo.
+
+### 6.2 Invariantes do Hard Reset
+* **INV-01 (Nuvem Soberana):** O banco de dados Supabase é a fonte única e absoluta da verdade para placares e súmulas. Se uma partida não possui súmula na tabela `scoresheets`, seus placares na aba Jogos e na aba Súmula DEVEM permanecer 100% zerados (`homeScore: null, awayScore: null, status: 'PENDING'`).
+* **INV-02 (Descarte Total de Resíduos Locais):** Ao disparar a sincronização bem-sucedida, o mapa de súmulas local (`scoresheets`) é zerado e reconstruído exclusivamente a partir do retorno da nuvem.
+* **INV-03 (Preservação de Segurança do Árbitro):** A autenticação por PIN do árbitro (`rockgol_judge_pin_auth` no `localStorage`) JAMAIS deve ser apagada ou afetada pelo Hard Reset do sincronismo.
+* **INV-04 (Proteção Contra Falha Offline):** Se `pullTournamentFromSupabase` falhar por falta de internet ou indisponibilidade do banco, o Hard Reset é ABORTADO imediatamente com aviso ao usuário, preservando o estado local existente.
+* **INV-05 (Recálculo Determinístico):** Após a carga limpa, a classificação da fase de grupos, artilharia, suspensões e chaveamento de mata-mata são recalculados determinística e reativamente do zero.
+
+---
+
+## 7. Critérios de Aceitação (BDD)
+
+### AC-001: Hard Reset Completo com Sobrescrita Limpa do Servidor
+* **Dado** que o aplicativo possui placares locais preenchidos manualmente ou súmulas locais antigas em memória/localStorage;
+* **Quando** o usuário (Torcida ou Juiz) clica no botão "Sincronizar" e o Supabase retorna com sucesso as súmulas oficiais;
+* **Então** o sistema descarta todos os placares locais simulados, reseta as partidas sem súmula para `PENDING` com placares `null`, e aplica exclusivamente as súmulas retornadas pelo Supabase.
+
+### AC-002: Não Restauração de Súmula Excluída no Banco
+* **Dado** que uma súmula de partida foi limpa pelo árbitro e excluída da tabela `scoresheets` no Supabase;
+* **Quando** o usuário clica em "Sincronizar" no dispositivo móvel;
+* **Então** a partida permanece com placar limpo (`homeScore: null, awayScore: null, status: 'PENDING'`) e nenhuma informação de gol/cartão anterior é reidratada.
+
+### AC-003: Preservação de Dados em Falha de Conexão
+* **Dado** que o dispositivo está offline ou a API do Supabase retorna erro HTTP durante a sincronização;
+* **Quando** o usuário clica no botão "Sincronizar";
+* **Então** o sistema exibe notificação amigável de erro de conexão ("Não foi possível conectar ao servidor. Tente novamente.") e NÃO reseta nem descarta o estado local atual.
+
+### AC-004: Preservação Incondicional do PIN da Arbitragem
+* **Dado** que o árbitro está autenticado no PWA Juiz com o PIN `2026` armazenado no `localStorage`;
+* **Quando** o árbitro aciona o botão "Sincronizar" e o Hard Reset é executado;
+* **Então** a chave de autenticação do PIN permanece válida no `localStorage` sem deslogar o árbitro da sessão.

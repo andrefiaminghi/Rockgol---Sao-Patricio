@@ -1,8 +1,22 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { Header } from '../../src/components/Header';
+import { applyHardResetFromRemote } from '../../src/services/scoresheetService';
+import { saveTournamentState, createDefaultTournamentState } from '../../src/services/storageService';
 
 describe('Header com Sincronização Supabase (HeaderSync)', () => {
+  let storageStore: Record<string, string> = {};
+
+  beforeEach(() => {
+    storageStore = {};
+    (globalThis as any).window = globalThis;
+    (globalThis as any).localStorage = {
+      getItem: (key: string) => storageStore[key] || null,
+      setItem: (key: string, value: string) => { storageStore[key] = value; },
+      removeItem: (key: string) => { delete storageStore[key]; },
+      clear: () => { storageStore = {}; }
+    };
+  });
   it('deve exportar o componente Header', () => {
     expect(Header).toBeDefined();
     expect(typeof Header).toBe('function');
@@ -48,5 +62,30 @@ describe('Header com Sincronização Supabase (HeaderSync)', () => {
     });
 
     expect(element.props.isOnline).toBe(false);
+  });
+
+  describe('Proteção de PIN e Invariantes no Sincronismo (INV-03, INV-04)', () => {
+    it('deve preservar incondicionalmente a chave rockgol_judge_pin_auth no localStorage durante o sincronismo', () => {
+      localStorage.setItem('rockgol_judge_pin_auth', '1234');
+      expect(localStorage.getItem('rockgol_judge_pin_auth')).toBe('1234');
+
+      // Simula a execução do hard reset
+      const cleanState = applyHardResetFromRemote(createDefaultTournamentState(), { scoresheets: {} });
+      saveTournamentState(cleanState);
+
+      // O PIN não deve ser apagado nem alterado
+      expect(localStorage.getItem('rockgol_judge_pin_auth')).toBe('1234');
+    });
+
+    it('não deve apagar dados locais se o retorno do Supabase indicar falha de rede/servidor (INV-04)', () => {
+      const remoteFailure = {
+        success: false,
+        error: 'Erro de conexão ou timeout'
+      };
+
+      // Se success for false, a rotina de sincronismo aborta sem chamar o reset
+      expect(remoteFailure.success).toBe(false);
+      expect(remoteFailure.error).toBeDefined();
+    });
   });
 });

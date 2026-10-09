@@ -15,7 +15,8 @@ import {
 import {
   syncMatchScoresFromScoresheets,
   removeScoresheetAndResetMatch,
-  canDeleteScoresheet
+  canDeleteScoresheet,
+  applyHardResetFromRemote
 } from './services/scoresheetService';
 import {
   pushScoresheetToSupabase,
@@ -284,61 +285,8 @@ export function App({ role = 'torcida' }: AppProps = {}) {
         showToast(remoteData.error || 'Não foi possível conectar ao servidor. Tente novamente.');
         return;
       }
-      const teamsFromRemote = remoteData?.teams || [];
-      const sheetsFromRemote = remoteData?.scoresheets || {};
-
       setState(prev => {
-        const mergedTeams =
-          teamsFromRemote.length > 0
-            ? prev.teams.map(localTeam => {
-                const remoteTeam = teamsFromRemote.find(t => t.id === localTeam.id);
-                return remoteTeam
-                  ? { ...localTeam, name: remoteTeam.name, players: remoteTeam.players }
-                  : localTeam;
-              })
-            : prev.teams;
-
-        // Deixar somente as súmulas oficiais vindas do servidor
-        const updatedSheets = sheetsFromRemote;
-
-        // Resetar os placares que não possuem súmula no servidor (limpa simulações locais)
-        const { matches, knockoutMatches } = syncMatchScoresFromScoresheets(
-          prev.matches,
-          prev.knockoutMatches,
-          updatedSheets,
-          true
-        );
-
-        // Recalcular chaveamento de mata-mata de acordo com a fase de grupos oficial do servidor
-        const officialStandings = calculateStandings(mergedTeams, matches);
-        const groupStageDone = isGroupStageCompleted(matches);
-
-        let finalKnockoutMatches = knockoutMatches;
-        if (groupStageDone) {
-          finalKnockoutMatches = generateSemifinals(officialStandings, knockoutMatches);
-        } else {
-          finalKnockoutMatches = knockoutMatches.map(m => ({
-            ...m,
-            homeTeamId: null,
-            awayTeamId: null,
-            homeScore: null,
-            awayScore: null,
-            homePenalties: null,
-            awayPenalties: null,
-            winnerTeamId: null,
-            loserTeamId: null,
-            status: 'PENDING' as const
-          }));
-        }
-
-        const updatedState: TournamentState = {
-          ...prev,
-          teams: mergedTeams,
-          scoresheets: updatedSheets,
-          matches,
-          knockoutMatches: finalKnockoutMatches,
-          lastUpdated: new Date().toISOString()
-        };
+        const updatedState = applyHardResetFromRemote(prev, remoteData);
         saveTournamentState(updatedState);
         return updatedState;
       });

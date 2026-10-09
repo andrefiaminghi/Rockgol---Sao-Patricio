@@ -5,6 +5,26 @@ project: "Rockgol - São Patrício"
 
 # Histórico de Sessões — Rockgol - São Patrício
 
+## [2026-10-09] Protocolo de Hard Reset no Sincronismo Supabase e Proteção de PIN
+- **Objetivo da Sessão:** Implementar a solução definitiva via TDD para o erro de sincronismo onde súmulas limpas eram restauradas ou novas súmulas eram sobrepostas ao sincronizar no celular. A cada sincronismo bem-sucedido, o aplicativo executa um Hard Reset no estado do torneio, reconstruindo os 21 jogos e o mata-mata a partir do zero com base estrita no Supabase.
+- **Vínculo ao Plano:** Plan `plan-2026-10-09-005` (Tasks 1 e 2)
+- **Atividades Realizadas:**
+  - **Função Pura `applyHardResetFromRemote` (`src/services/scoresheetService.ts`):**
+    - Descarte de qualquer súmula local não presente no Supabase.
+    - Reset incondicional para `homeScore: null, awayScore: null, status: 'PENDING'` de todas as partidas sem súmula no servidor.
+    - Aplicação limpa de gols e cartões apenas para partidas com súmula oficial.
+    - Preservação da lista e nomes dos times locais ou atualização se o servidor fornecer.
+    - Recálculo reativo da classificação geral e chaveamento de mata-mata.
+  - **Integração no `App.tsx` (`handleSync`):**
+    - Substituição da montagem manual pela chamada limpa `applyHardResetFromRemote(prev, remoteData)`.
+    - Persistência imediata via `saveTournamentState`.
+    - Preservação incondicional da chave de autenticação do árbitro (`rockgol_judge_pin_auth`) no `localStorage`.
+    - Contingência offline: se `pullTournamentFromSupabase` falhar ou perder conexão, nenhum dado local é descartado.
+  - **Testes Automatizados:**
+    - Criado [`tests/unit/hardResetSync.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/hardResetSync.test.ts) com 3 testes unitários cobrindo descarte de súmulas órfãs, aplicação de súmulas ativas e atualização de elencos.
+    - Atualizado [`tests/unit/headerSync.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/headerSync.test.ts) validando invariantes INV-03 (PIN intacto) e INV-04 (contingência offline).
+    - 105/105 testes passando com 100% de cobertura e build de produção validado (`npm run build`).
+
 ## [2026-10-09] Diagnóstico e Resolução de Cache do Service Worker (PWA) e Sincronismo Supabase
 - **Objetivo da Sessão:** Investigar e solucionar o problema reportado onde:
   1. Ao excluir uma súmula no celular, ao tocar em "Sincronizar", o sistema recarregava novamente os dados da súmula limpa/removida.

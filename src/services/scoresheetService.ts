@@ -1,5 +1,7 @@
-import { Match, KnockoutMatch, Team, MatchScoresheet, TopScorer, PlayerSuspension } from '../types/tournament';
-import { resolveKnockoutMatch, updateFinalsFromSemifinals } from './knockoutService';
+import { Match, KnockoutMatch, Team, MatchScoresheet, TopScorer, PlayerSuspension, TournamentState } from '../types/tournament';
+import { resolveKnockoutMatch, updateFinalsFromSemifinals, generateSemifinals } from './knockoutService';
+import { INITIAL_MATCHES, INITIAL_KNOCKOUT_MATCHES } from '../data/initialTournamentData';
+import { calculateStandings, isGroupStageCompleted } from './standingsService';
 
 /**
  * Sincroniza condicionalmente os placares de partidas da fase de grupos e mata-mata
@@ -338,3 +340,83 @@ export function removeScoresheetAndResetMatch(
     scoresheets: updatedSheets
   };
 }
+
+/**
+ * Executa o protocolo de Hard Reset do torneio a partir dos dados remotos do Supabase.
+ * - Restaura a grade inicial das partidas zeradas (status: 'PENDING', placares: null).
+ * - Descarta qualquer súmula local antiga e aplica estritamente as do servidor.
+ * - Atualiza times se o servidor fornecer dados da tabela teams.
+ * - Recalcula classificação e chaveamento do mata-mata do zero.
+ */
+export function applyHardResetFromRemote(
+  prevState: TournamentState,
+  remoteData: {
+    scoresheets?: Record<string, MatchScoresheet>;
+    teams?: Team[];
+  }
+): TournamentState {
+  const remoteTeams = remoteData?.teams || [];
+  const remoteSheets = remoteData?.scoresheets || {};
+
+  // 1. Mescla de elencos: se o servidor trouxer times, atualiza os locais; caso contrário, preserva
+  const mergedTeams =
+    remoteTeams.length > 0
+      ? prevState.teams.map(localTeam => {
+          const remoteTeam = remoteTeams.find(t => t.id === localTeam.id);
+          return remoteTeam
+            ? { ...localTeam, name: remoteTeam.name, players: remoteTeam.players }
+            : localTeam;
+        })
+      : prevState.teams;
+
+  // 2. Hard reset dos placares: parte da estrutura original virgem (INITIAL_MATCHES / INITIAL_KNOCKOUT_MATCHES)
+  // e aplica estritamente as súmulas ativas do servidor
+  const { matches, knockoutMatches } = syncMatchScoresFromScoresheets(
+    INITIAL_MATCHES,
+    INITIAL_KNOCKOUT_MATCHES,
+    remoteSheets,
+    true
+  );
+
+  // 3. Recalcula classificação oficial do zero
+  const officialStandings = calculateStandings(mergedTeams, matches);
+  const groupStageDone = isGroupStageCompleted(matches);
+
+  let finalKnockoutMatches = knockoutMatches;
+  if (groupStageDone) {
+    // Se a 1ª fase estiver finalizada no servidor, gera as semifinais oficiais
+    finalKnockoutMatches = generateSemifinals(officialStandings, knockoutMatches);
+    // Aplica eventuais súmulas de mata-mata já existentes no servidor sobre as semifinais geradas
+    const syncedKnockout = syncMatchScoresFromScoresheets(
+      matches,
+      finalKnockoutMatches,
+      remoteSheets,
+      true
+    );
+    finalKnockoutMatches = syncedKnockout.knockoutMatches;
+  } else {
+    // Caso a 1ª fase ainda não tenha concluído no servidor, o mata-mata fica no estado virgem pendente
+    finalKnockoutMatches = INITIAL_KNOCKOUT_MATCHES.map(m => ({
+      ...m,
+      homeTeamId: null,
+      awayTeamId: null,
+      homeScore: null,
+      awayScore: null,
+      homePenalties: null,
+      awayPenalties: null,
+      winnerTeamId: null,
+      loserTeamId: null,
+      status: 'PENDING' as const
+    }));
+  }
+
+  return {
+    ...prevState,
+    teams: mergedTeams,
+    matches,
+    knockoutMatches: finalKnockoutMatches,
+    scoresheets: remoteSheets,
+    lastUpdated: new Date().toISOString()
+  };
+}
+
