@@ -142,14 +142,14 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
       {/* Conteúdo: 1. Partidas da Rodada */}
       {subTab === 'partidas' && (
         <div className="space-y-3">
-          {/* Carrossel de Rodadas */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1.5 no-scrollbar scroll-smooth">
+          {/* Distribuição das Rodadas em 2 linhas (sem necessidade de rolagem horizontal) */}
+          <div className="grid grid-cols-6 gap-1.5 sm:gap-2">
             {rounds.map(r => (
               <button
                 key={r}
                 type="button"
                 onClick={() => setSelectedRound(r)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
+                className={`py-2 px-1 rounded-xl text-xs font-bold text-center transition-all border flex items-center justify-center ${
                   selectedRound === r
                     ? 'bg-[#29A634] text-white border-[#29A634] shadow-md shadow-[#29A634]/20'
                     : 'bg-[#1C2127] text-[#8F99A8] border-[#2F343C] hover:text-white hover:border-[#383E47]'
@@ -161,7 +161,7 @@ export const ScoresheetTab: React.FC<ScoresheetTabProps> = ({
             <button
               type="button"
               onClick={() => setSelectedRound('mata-mata')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
+              className={`py-2 px-1 rounded-xl text-[10px] sm:text-xs font-bold text-center transition-all border flex items-center justify-center ${
                 selectedRound === 'mata-mata'
                   ? 'bg-amber-500 text-black border-amber-500 shadow-md shadow-amber-500/20'
                   : 'bg-[#1C2127] text-[#8F99A8] border-[#2F343C] hover:text-white hover:border-[#383E47]'
