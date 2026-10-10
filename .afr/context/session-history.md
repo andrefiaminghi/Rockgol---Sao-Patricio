@@ -1,9 +1,34 @@
 ---
-last_updated: "2026-10-09T19:20:00-03:00"
+last_updated: "2026-10-09T22:35:00-03:00"
 project: "Rockgol - São Patrício"
 ---
 
 # Histórico de Sessões — Rockgol - São Patrício
+
+## [2026-10-09] Refinamento do Header e Modernização da Aba Info
+- **Objetivo da Sessão:** Atender à solicitação de refinamento visual e enxugamento de controles não utilizados no Header e modernização da 6ª aba:
+  1. Header: remover o ícone de disquete (salvar dados) e o ícone de resetar torneio.
+  2. Header: alinhar o badge "Árbitro" junto ao agrupamento de ações da direita em perfeito fluxo e altura com o botão "Sincronizar".
+  3. Navegação: alterar o nome da 6ª aba de "Exportar" para "Info" e ícone para `Info`.
+  4. Aba Info (`ExportTab.tsx`): mudar o título para "Informações Gerais", remover o subtítulo "PDF • WhatsApp • JSON", remover o bloco "Backup e Sincronização" e incluir no final o card de créditos "Desenvolvido por AFR Soluções".
+- **Vínculo ao Plano:** Plan `plan-2026-10-09-009` (Tasks 1 a 3) e Critérios AC-015 e AC-016 em `.afr/features/rockgol-torneio-app.md`.
+- **Atividades Realizadas:**
+  - **Limpeza e Alinhamento do Header (`src/components/Header.tsx`):**
+    - Ícones `Save` (disquete) e `RotateCcw` (reset) removidos da interface.
+    - O badge "ÁRBITRO" foi transferido para o bloco de ações à direita (`h-9 px-2.5 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/30`), garantindo alinhamento horizontal e vertical impecável ao lado do botão "Sincronizar".
+  - **Modernização da Navegação (`src/components/Navigation.tsx`):**
+    - Rótulo da 6ª aba atualizado para "Info", com ícone `Info` de `lucide-react`.
+  - **Reestruturação da Aba Info (`src/components/ExportTab.tsx`):**
+    - Título ajustado para "Informações Gerais" acompanhado de ícone de informação.
+    - Subtítulo "PDF • WhatsApp • JSON" removido.
+    - Bloco "Backup e Sincronização" (download e upload de JSON) totalmente removido.
+    - Inclusão do card institucional como último bloco: "Desenvolvido por AFR Soluções" (layout premium dark glassmorphism com badge "Versão 2026").
+  - **Limpeza no App Principal (`src/App.tsx`):**
+    - Removidas as props obsoletas `onQuickSave` e `onResetPrompt` passadas para o Header.
+  - **Testes Automatizados & Qualidade:**
+    - Atualizados [`tests/unit/headerSync.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/headerSync.test.ts) e [`tests/unit/scoresheetExport.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/scoresheetExport.test.ts) com ciclo TDD (RED -> GREEN).
+    - Suíte completa com 115/115 testes passando no Vitest (`npm test`).
+    - Build de produção (`tsc && vite build`) validado com código de saída 0.
 
 ## [2026-10-09] Posicionamento da Barra de Abas Abaixo do Header (Sub-Header Superior)
 - **Objetivo da Sessão:** Mover a barra de navegação com as 6 abas (`Jogos`, `Times`, `Classificação`, `Mata-Mata`, `Súmula`, `Exportar`) do rodapé para o topo da tela, logo abaixo do Header principal (atuando como um segundo header estático / sub-header), eliminando qualquer risco de sobreposição por botões virtuais de navegação do celular.

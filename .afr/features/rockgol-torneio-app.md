@@ -206,6 +206,16 @@ export interface IBackupService {
   * **Quando** o layout é montado,
   * **Então** o bloco superior unificado (Header + Navigation) permanece ancorado e estático no topo com `shrink-0 z-30`, enquanto a base da tela permanece totalmente livre e desobstruída de barras de abas.
 
+* **AC-015 (Limpeza e Alinhamento do Cabeçalho):**
+  * **Dado** o cabeçalho (`Header`) em qualquer um dos dois PWAs (Torcida e Árbitro),
+  * **Quando** o cabeçalho é renderizado,
+  * **Então** os ícones de salvar dados (disquete) e de resetar torneio não devem mais ser exibidos no header, e o indicador/badge de perfil "Árbitro" deve ser posicionado no bloco de ações à direita em perfeito alinhamento de altura e fluxo com o botão "Sincronizar".
+
+* **AC-016 (Aba Info e Informações Gerais com Créditos AFR):**
+  * **Dado** a navegação e a aba de informações gerais,
+  * **Quando** o usuário visualiza a barra de navegação e acessa a 6ª aba,
+  * **Então** a aba deve exibir o nome "Info" (com ícone informativo de Info), o título interno principal deve ser "Informações Gerais", sem o subtítulo "PDF - WhatsApp - Json", sem o bloco obsoleto "Backup e Sincronização", e contendo como último bloco o card institucional "Desenvolvido por AFR Soluções".
+
 ## 4. Casos Negativos & Condições de Borda
 
 * **Edição de Placar Após Avanço do Mata-Mata:** Se um placar da 1ª fase for modificado após o início do mata-mata e alterar os 4 primeiros colocados, o sistema deve alertar o usuário de que o mata-mata precisará ser recalculado ou mantido.

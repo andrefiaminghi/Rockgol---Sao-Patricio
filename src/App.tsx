@@ -326,8 +326,6 @@ export function App({ role = 'torcida' }: AppProps = {}) {
         onSync={handleSync}
         finishedMatchesCount={finishedMatchesCount}
         totalMatchesCount={state.matches.length}
-        onQuickSave={() => setActiveTab('export')}
-        onResetPrompt={handleResetState}
       />
 
       {/* Segundo Header: Barra de Abas Fixa no Topo */}

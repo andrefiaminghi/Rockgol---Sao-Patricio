@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
+import { renderToString } from 'react-dom/server';
 import { Header } from '../../src/components/Header';
 import { applyHardResetFromRemote } from '../../src/services/scoresheetService';
 import { saveTournamentState, createDefaultTournamentState } from '../../src/services/storageService';
@@ -62,6 +63,28 @@ describe('Header com Sincronização Supabase (HeaderSync)', () => {
     });
 
     expect(element.props.isOnline).toBe(false);
+  });
+
+  it('NÃO deve renderizar o botão de disquete (salvar dados) nem botão de resetar torneio no header', () => {
+    const htmlJuiz = renderToString(React.createElement(Header, { role: 'juiz' }));
+    const htmlTorcida = renderToString(React.createElement(Header, { role: 'torcida' }));
+
+    expect(htmlJuiz).not.toContain('Salvar / Exportar Backup');
+    expect(htmlJuiz).not.toContain('Reiniciar Torneio');
+    expect(htmlTorcida).not.toContain('Salvar / Exportar Backup');
+    expect(htmlTorcida).not.toContain('Reiniciar Torneio');
+  });
+
+  it('deve alinhar o badge ÁRBITRO junto ao agrupamento de ações do lado direito com Sincronizar', () => {
+    const htmlJuiz = renderToString(React.createElement(Header, { role: 'juiz' }));
+
+    expect(htmlJuiz).toContain('ÁRBITRO');
+    expect(htmlJuiz).toContain('Sincronizar');
+    // Valida que o badge ÁRBITRO está dentro do container de ações da direita
+    const direitoIndex = htmlJuiz.indexOf('Sincronizar');
+    const arbitroIndex = htmlJuiz.indexOf('ÁRBITRO');
+    expect(arbitroIndex).toBeGreaterThan(-1);
+    expect(direitoIndex).toBeGreaterThan(-1);
   });
 
   describe('Proteção de PIN e Invariantes no Sincronismo (INV-03, INV-04)', () => {

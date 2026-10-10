@@ -31,6 +31,8 @@ vi.mock('jspdf', () => {
   };
 });
 
+import React from 'react';
+import { renderToString } from 'react-dom/server';
 import {
   formatTopScorersForWhatsApp,
   formatSuspensionsForWhatsApp,
@@ -39,6 +41,7 @@ import {
   generateAndDownloadTournamentPdf
 } from '../../src/services/pdfExportService';
 import { ExportTab } from '../../src/components/ExportTab';
+import { Navigation } from '../../src/components/Navigation';
 import { TopScorer, PlayerSuspension, TournamentState } from '../../src/types/tournament';
 import { INITIAL_TEAMS, INITIAL_MATCHES, INITIAL_KNOCKOUT_MATCHES } from '../../src/data/initialTournamentData';
 
@@ -159,9 +162,73 @@ describe('Exportação de Súmulas e WhatsApp (scoresheetExport)', () => {
     });
   });
 
-  describe('Componente ExportTab', () => {
+  describe('Componente ExportTab e Navegação da Aba Info', () => {
     it('deve exportar o componente ExportTab atualizado', () => {
       expect(ExportTab).toBeDefined();
+    });
+
+    it('Navigation deve exibir a aba com o nome Info e não mais Exportar', () => {
+      const htmlNav = renderToString(
+        React.createElement(Navigation, { activeTab: 'export', onTabChange: () => {} })
+      );
+
+      expect(htmlNav).toContain('Info');
+      expect(htmlNav).not.toContain('Exportar');
+    });
+
+    it('ExportTab deve renderizar título Informações Gerais, sem menção a PDF/Whatsapp/Json no subtítulo', () => {
+      const dummyState: TournamentState = {
+        teams: INITIAL_TEAMS,
+        matches: INITIAL_MATCHES,
+        knockoutMatches: INITIAL_KNOCKOUT_MATCHES,
+        scoresheets: {},
+        version: 1,
+        lastUpdated: new Date().toISOString()
+      };
+
+      const htmlTab = renderToString(
+        React.createElement(ExportTab, {
+          state: dummyState,
+          onRestoreState: () => {},
+          onResetState: () => {}
+        })
+      );
+
+      // Deve ter Informações Gerais e não ter Exportação & Relatórios
+      expect(htmlTab).toContain('Informações Gerais');
+      expect(htmlTab).not.toContain('Exportação &amp; Relatórios');
+      expect(htmlTab).not.toContain('Exportação & Relatórios');
+
+      // Não deve ter o subtítulo PDF • WhatsApp • JSON
+      expect(htmlTab).not.toContain('PDF • WhatsApp • JSON');
+      expect(htmlTab).not.toContain('PDF - Whatsapp - Json');
+    });
+
+    it('ExportTab não deve conter o bloco Backup e Sincronização e deve incluir Desenvolvido por AFR Soluções como último bloco', () => {
+      const dummyState: TournamentState = {
+        teams: INITIAL_TEAMS,
+        matches: INITIAL_MATCHES,
+        knockoutMatches: INITIAL_KNOCKOUT_MATCHES,
+        scoresheets: {},
+        version: 1,
+        lastUpdated: new Date().toISOString()
+      };
+
+      const htmlTab = renderToString(
+        React.createElement(ExportTab, {
+          state: dummyState,
+          onRestoreState: () => {},
+          onResetState: () => {}
+        })
+      );
+
+      // Bloco de Backup removido
+      expect(htmlTab).not.toContain('Backup e Sincronização');
+      expect(htmlTab).not.toContain('Baixar Backup (.json)');
+      expect(htmlTab).not.toContain('Restaurar Backup');
+
+      // Bloco institucional AFR Soluções presente
+      expect(htmlTab).toContain('Desenvolvido por AFR Soluções');
     });
   });
 });

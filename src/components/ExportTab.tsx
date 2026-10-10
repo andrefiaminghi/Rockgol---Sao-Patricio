@@ -1,7 +1,6 @@
-import React, { useRef, useState } from 'react';
-import { Download, Upload, RotateCcw, CheckCircle2, AlertCircle, MessageCircle, FileText, Trophy, ShieldAlert } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, AlertCircle, CheckCircle2, MessageCircle, FileText, Trophy, ShieldAlert, RotateCcw, Info, Sparkles } from 'lucide-react';
 import { TournamentState } from '../types/tournament';
-import { saveTournamentBackupFile, importTournamentBackup } from '../services/backupService';
 import {
   generateAndDownloadTournamentPdf,
   shareClassificationToWhatsApp,
@@ -11,12 +10,11 @@ import {
 
 interface ExportTabProps {
   state: TournamentState;
-  onRestoreState: (state: TournamentState) => void;
-  onResetState: () => void;
+  onRestoreState?: (state: TournamentState) => void;
+  onResetState?: () => void;
 }
 
-export const ExportTab: React.FC<ExportTabProps> = ({ state, onRestoreState, onResetState }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+export const ExportTab: React.FC<ExportTabProps> = ({ state, onResetState }) => {
   const [feedback, setFeedback] = useState<{ message: string; isError: boolean } | null>(null);
 
   const handleDownloadPdf = () => {
@@ -80,43 +78,8 @@ export const ExportTab: React.FC<ExportTabProps> = ({ state, onRestoreState, onR
     }
   };
 
-  const handleDownloadBackup = async () => {
-    try {
-      setFeedback({
-        message: 'Preparando arquivo de backup...',
-        isError: false
-      });
-      const result = await saveTournamentBackupFile(state);
-      setFeedback({
-        message: result.message,
-        isError: !result.success
-      });
-    } catch (err: any) {
-      setFeedback({ message: `Erro ao exportar backup: ${err.message}`, isError: true });
-    }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = event => {
-      const content = event.target?.result as string;
-      const res = importTournamentBackup(content);
-      if (res.success && res.state) {
-        onRestoreState(res.state);
-        setFeedback({ message: 'Backup restaurado com 100% de sucesso!', isError: false });
-      } else {
-        setFeedback({ message: res.error || 'Falha ao restaurar arquivo.', isError: true });
-      }
-    };
-    reader.readAsText(file);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
   const handleReset = () => {
-    if (window.confirm('Atenção: Deseja realmente resetar todos os placares e dados para o início do torneio?')) {
+    if (onResetState && window.confirm('Atenção: Deseja realmente resetar todos os placares e dados para o início do torneio?')) {
       onResetState();
       setFeedback({ message: 'Torneio resetado para os valores padrões iniciais.', isError: false });
     }
@@ -127,14 +90,11 @@ export const ExportTab: React.FC<ExportTabProps> = ({ state, onRestoreState, onR
       {/* Título da Seção */}
       <div className="flex items-center justify-between px-1 pt-1">
         <div className="flex items-center gap-2">
-          <span className="text-lg">📁</span>
+          <Info className="w-5 h-5 text-[#00D26A]" />
           <h2 className="text-sm sm:text-base font-bold text-white tracking-tight font-['Outfit',sans-serif]">
-            Exportação & Relatórios
+            Informações Gerais
           </h2>
         </div>
-        <span className="text-xs text-[#8B9BB4] font-medium">
-          PDF • WhatsApp • JSON
-        </span>
       </div>
 
       {/* Banner / Feedback */}
@@ -237,62 +197,43 @@ export const ExportTab: React.FC<ExportTabProps> = ({ state, onRestoreState, onR
         </div>
       </div>
 
-      {/* Card 3: Backup JSON */}
-      <div className="bg-[#121D2F] border border-[#1E2D44] rounded-2xl p-4 shadow-xl space-y-3">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-[#38BDF8]/15 border border-[#38BDF8]/30 flex items-center justify-center text-[#38BDF8]">
-            <Download className="w-5 h-5" />
+      {/* Card 3: Reiniciar Dados do Torneio (Apenas se configurado) */}
+      {onResetState && (
+        <div className="bg-[#121D2F]/70 border border-[#EF4444]/30 rounded-2xl p-4 space-y-2">
+          <div className="flex items-center space-x-2 text-[#EF4444]">
+            <RotateCcw className="w-4 h-4" />
+            <h2 className="text-xs font-bold uppercase tracking-wider font-['Outfit',sans-serif]">Reiniciar Dados do Torneio</h2>
+          </div>
+          <p className="text-[11px] text-[#8B9BB4]">
+            Limpa todos os placares preenchidos e redefine as partidas para o estado inicial da tabela oficial.
+          </p>
+          <button
+            onClick={handleReset}
+            className="mt-2 py-2 px-3 rounded-xl border border-[#EF4444]/40 text-[#EF4444] hover:bg-[#EF4444]/10 font-bold text-xs transition"
+          >
+            Resetar Torneio
+          </button>
+        </div>
+      )}
+
+      {/* Último Bloco: Desenvolvido por AFR Soluções */}
+      <div className="bg-[#121D2F] border border-[#1E2D44] rounded-2xl p-4 shadow-xl flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#00D26A]/15 border border-[#00D26A]/30 flex items-center justify-center text-[#00D26A]">
+            <Sparkles className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-white font-['Outfit',sans-serif]">Backup e Sincronização</h2>
-            <p className="text-xs text-[#8B9BB4]">
-              Exporte todos os dados para transferir ou restaurar em outro aparelho celular.
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#8B9BB4] font-['Outfit',sans-serif]">
+              Tecnologia & Inovação
             </p>
+            <h3 className="text-sm font-bold text-white tracking-tight font-['Outfit',sans-serif]">
+              Desenvolvido por AFR Soluções
+            </h3>
           </div>
         </div>
-
-        <div className="grid grid-cols-2 gap-2.5 pt-1">
-          <button
-            onClick={handleDownloadBackup}
-            className="py-2.5 px-3 rounded-xl bg-[#1A2538] hover:bg-[#22314A] active:scale-[0.99] font-bold text-xs text-white flex items-center justify-center gap-1.5 border border-[#22314A] transition"
-          >
-            <Download className="w-3.5 h-3.5 text-[#38BDF8]" />
-            Baixar Backup (.json)
-          </button>
-
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="py-2.5 px-3 rounded-xl bg-[#1A2538] hover:bg-[#22314A] active:scale-[0.99] font-bold text-xs text-white flex items-center justify-center gap-1.5 border border-[#22314A] transition"
-          >
-            <Upload className="w-3.5 h-3.5 text-[#00D26A]" />
-            Restaurar Backup
-          </button>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json,application/json"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#00D26A]/10 border border-[#00D26A]/30 text-[#00D26A] text-[10px] font-black tracking-wider uppercase">
+          Versão 2026
         </div>
-      </div>
-
-      {/* Card 4: Zona de Perigo / Reset */}
-      <div className="bg-[#121D2F]/70 border border-[#EF4444]/30 rounded-2xl p-4 space-y-2">
-        <div className="flex items-center space-x-2 text-[#EF4444]">
-          <RotateCcw className="w-4 h-4" />
-          <h2 className="text-xs font-bold uppercase tracking-wider font-['Outfit',sans-serif]">Reiniciar Dados do Torneio</h2>
-        </div>
-        <p className="text-[11px] text-[#8B9BB4]">
-          Limpa todos os placares preenchidos e redefine as partidas para o estado inicial da tabela oficial.
-        </p>
-        <button
-          onClick={handleReset}
-          className="mt-2 py-2 px-3 rounded-xl border border-[#EF4444]/40 text-[#EF4444] hover:bg-[#EF4444]/10 font-bold text-xs transition"
-        >
-          Resetar Torneio
-        </button>
       </div>
     </div>
   );

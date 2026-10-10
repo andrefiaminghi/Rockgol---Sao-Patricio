@@ -1,5 +1,5 @@
 import React from 'react';
-import { Save, RotateCcw, RefreshCw, Cloud, CloudOff, ShieldCheck } from 'lucide-react';
+import { RefreshCw, Cloud, CloudOff, ShieldCheck } from 'lucide-react';
 
 export interface HeaderProps {
   role?: 'torcida' | 'juiz';
@@ -18,9 +18,7 @@ export const Header: React.FC<HeaderProps> = ({
   isSyncing = false,
   lastSyncTime,
   isOnline = true,
-  onSync,
-  onQuickSave,
-  onResetPrompt
+  onSync
 }) => {
   return (
     <header className="shrink-0 z-30 bg-[#0B1320]/95 backdrop-blur-md px-4 pt-safe pb-3 border-b border-[#1E2D44]">
@@ -45,11 +43,6 @@ export const Header: React.FC<HeaderProps> = ({
               <h1 className="text-base font-black tracking-tight text-white leading-none font-['Outfit',sans-serif]">
                 ROCKGOL 2026
               </h1>
-              {role === 'juiz' && (
-                <span className="text-[9px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  ÁRBITRO
-                </span>
-              )}
             </div>
             <div className="flex items-center gap-2 mt-1 leading-none">
               <p className="text-[11px] font-bold text-[#00D26A] tracking-wider uppercase font-['Outfit',sans-serif]">
@@ -64,12 +57,22 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Lado Direito: Botões de Ação */}
+        {/* Lado Direito: Ações e Status (Árbitro perfeitamente alinhado com Sincronizar) */}
         <div className="flex items-center gap-2">
+          {/* Badge Árbitro alinhado com Sincronizar */}
+          {role === 'juiz' && (
+            <span
+              className="h-9 px-2.5 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center justify-center text-[10px] font-black tracking-wider uppercase shadow-sm"
+              title="Painel Oficial da Arbitragem"
+            >
+              ÁRBITRO
+            </span>
+          )}
+
           {/* Indicador de Status da Nuvem para o Juiz */}
           {role === 'juiz' && (
             <div
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-bold border transition ${
+              className={`h-9 flex items-center gap-1.5 px-2.5 rounded-xl text-[10px] font-bold border transition ${
                 isOnline
                   ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                   : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
@@ -106,26 +109,6 @@ export const Header: React.FC<HeaderProps> = ({
             <RefreshCw className={`w-3.5 h-3.5 text-[#00D26A] ${isSyncing ? 'animate-spin' : ''}`} />
             <span className="text-[11px] font-bold tracking-tight">Sincronizar</span>
           </button>
-
-          {/* Botão Salvar / Backup */}
-          <button
-            onClick={onQuickSave}
-            title="Salvar / Exportar Backup"
-            className="w-9 h-9 rounded-xl bg-[#1A2538] hover:bg-[#22314A] active:scale-95 border border-[#22314A] flex items-center justify-center text-[#8B9BB4] hover:text-white transition shadow-sm"
-          >
-            <Save className="w-4 h-4 text-[#A78BFA]" />
-          </button>
-
-          {/* Botão Reiniciar Torneio (Apenas Juiz / Arbitragem) */}
-          {role === 'juiz' && (
-            <button
-              onClick={onResetPrompt}
-              title="Reiniciar Torneio"
-              className="w-9 h-9 rounded-xl bg-[#1A2538] hover:bg-[#22314A] active:scale-95 border border-[#22314A] flex items-center justify-center text-[#8B9BB4] hover:text-white transition shadow-sm"
-            >
-              <RotateCcw className="w-4 h-4 text-[#38BDF8]" />
-            </button>
-          )}
         </div>
       </div>
     </header>

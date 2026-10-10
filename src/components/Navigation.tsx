@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Users, Trophy, Swords, ClipboardList, Download } from 'lucide-react';
+import { Calendar, Users, Trophy, Swords, ClipboardList, Info } from 'lucide-react';
 
 export type TabType = 'matches' | 'teams' | 'standings' | 'knockout' | 'scoresheet' | 'export';
 
@@ -15,7 +15,7 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }
     { id: 'standings' as TabType, label: 'Classificação', icon: Trophy },
     { id: 'knockout' as TabType, label: 'Mata-Mata', icon: Swords },
     { id: 'scoresheet' as TabType, label: 'Súmula', icon: ClipboardList },
-    { id: 'export' as TabType, label: 'Exportar', icon: Download }
+    { id: 'export' as TabType, label: 'Info', icon: Info }
   ];
 
   return (
