@@ -19,7 +19,7 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }
   ];
 
   return (
-    <nav className="sticky bottom-0 left-0 right-0 z-40 bg-[#1C2127]/95 backdrop-blur-md border-t border-[#2F343C] pb-safe shadow-2xl">
+    <nav className="shrink-0 z-40 bg-[#1C2127]/95 backdrop-blur-md border-t border-[#2F343C] pb-safe shadow-2xl">
       <div className="grid grid-cols-6 px-1 py-1.5">
         {tabs.map(tab => {
           const Icon = tab.icon;

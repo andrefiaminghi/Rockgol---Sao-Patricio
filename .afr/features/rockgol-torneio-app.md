@@ -186,6 +186,26 @@ export interface IBackupService {
   * **Quando** o workflow do GitHub Actions for executado,
   * **Então** o processo de build do Vite gera o pacote estático com base relativa e efetua o deploy no GitHub Pages sob HTTPS gratuito e seguro.
 
+* **AC-011 (Header Estático no Topo):**
+  * **Dado** o acesso a qualquer uma das abas (`Jogos`, `Times`, `Classificação`, `Mata-Mata`, `Súmula`, `Exportar`) em qualquer um dos dois PWAs (Torcida ou Árbitro),
+  * **Quando** o usuário rola o conteúdo verticalmente,
+  * **Então** o cabeçalho (`Header`) deve permanecer 100% estático e fixado no topo da tela, visível o tempo todo sem sofrer deslocamento.
+
+* **AC-012 (Footer de Abas Estático na Base):**
+  * **Dado** o acesso a qualquer uma das abas em qualquer um dos dois PWAs,
+  * **Quando** o usuário rola o conteúdo verticalmente,
+  * **Então** a barra de navegação inferior (`Navigation`) deve permanecer 100% estática e fixada na base da tela, visível o tempo todo sem sofrer deslocamento.
+
+* **AC-013 (Rolagem Independente do Conteúdo):**
+  * **Dado** um conteúdo de aba extenso com múltiplos cards ou tabelas que excedem a altura da tela,
+  * **Quando** o usuário interage rolando a página,
+  * **Então** apenas o container do meio (`<main>`) deve rolar verticalmente com rolagem suave (`overscroll-contain`), garantindo que o último elemento da lista possa ser visualizado sem ser cortado pelo rodapé.
+
+* **AC-014 (Simulador Desktop e Safe Areas):**
+  * **Dado** a exibição no modo simulador de smartphone no desktop ou em celulares reais com notch/safe-areas (iOS e Android),
+  * **Quando** o layout é montado,
+  * **Então** a estrutura fixa deve respeitar os limites do container simulado no desktop (`h-full` contido na moldura) e as margens de segurança `pt-safe` e `pb-safe` em dispositivos móveis.
+
 ## 4. Casos Negativos & Condições de Borda
 
 * **Edição de Placar Após Avanço do Mata-Mata:** Se um placar da 1ª fase for modificado após o início do mata-mata e alterar os 4 primeiros colocados, o sistema deve alertar o usuário de que o mata-mata precisará ser recalculado ou mantido.

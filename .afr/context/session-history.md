@@ -5,6 +5,22 @@ project: "Rockgol - São Patrício"
 
 # Histórico de Sessões — Rockgol - São Patrício
 
+## [2026-10-09] Header e Footer Estáticos no Topo e Base (App Shell Fixo)
+- **Objetivo da Sessão:** Atender à solicitação do usuário para que o Header permaneça 100% estático no topo da tela e o Footer com as 6 abas permaneça 100% estático no rodapé da tela, sem nenhum deslocamento vertical ao rolar, em qualquer aba acessada e em ambos os PWAs (Torcida e Árbitro).
+- **Vínculo ao Plano:** Plan `plan-2026-10-09-006` (Tasks 1 a 3) e Critérios AC-011 a AC-014 em `.afr/features/rockgol-torneio-app.md`.
+- **Atividades Realizadas:**
+  - **Refatoração da Arquitetura do App Shell (`src/App.tsx`):**
+    - `AppContent`: configurado com `h-full max-h-full overflow-hidden flex flex-col relative`, contendo estritamente os limites visuais da tela.
+    - `<main>`: configurado como o único container rolável vertical (`flex-1 w-full overflow-y-auto overscroll-contain px-3.5 pt-3.5 pb-8`), permitindo rolagem fluida e independente em todas as 6 abas (`Jogos`, `Times`, `Classificação`, `Mata-Mata`, `Súmula`, `Exportar`).
+    - Viewport móvel e simulador desktop ajustados com `h-screen h-[100dvh]` e `overflow-hidden`, eliminando rolagem dupla da janela global.
+  - **Componentes de Topo e Rodapé (`Header.tsx` e `Navigation.tsx`):**
+    - `Header`: fixado no topo com `shrink-0 z-30 pt-safe`, mantendo o logotipo, título e botão sincronizar sempre visíveis.
+    - `Navigation`: fixado no rodapé com `shrink-0 z-40 pb-safe`, mantendo as 6 abas permanentemente visíveis e clicáveis em qualquer momento da rolagem.
+  - **Testes Automatizados:**
+    - Criada a suíte [`tests/unit/appShellLayout.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/appShellLayout.test.ts) cobrindo as classes estruturais de ancoragem e rolagem com ciclo TDD completo (RED -> GREEN).
+    - Suíte completa com 109/109 testes passando no Vitest (`npm test`).
+    - Compilação de produção (`npm run build`) validada sem erros.
+
 ## [2026-10-09] Protocolo de Hard Reset no Sincronismo Supabase e Proteção de PIN
 - **Objetivo da Sessão:** Implementar a solução definitiva via TDD para o erro de sincronismo onde súmulas limpas eram restauradas ou novas súmulas eram sobrepostas ao sincronizar no celular. A cada sincronismo bem-sucedido, o aplicativo executa um Hard Reset no estado do torneio, reconstruindo os 21 jogos e o mata-mata a partir do zero com base estrita no Supabase.
 - **Vínculo ao Plano:** Plan `plan-2026-10-09-005` (Tasks 1 e 2)

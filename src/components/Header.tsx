@@ -23,7 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
   onResetPrompt
 }) => {
   return (
-    <header className="sticky top-0 z-30 bg-[#0B1320]/95 backdrop-blur-md px-4 pt-safe pb-3 border-b border-[#1E2D44]">
+    <header className="shrink-0 z-30 bg-[#0B1320]/95 backdrop-blur-md px-4 pt-safe pb-3 border-b border-[#1E2D44]">
       <div className="flex items-center justify-between">
         {/* Lado Esquerdo: Logo + Títulos */}
         <div className="flex items-center gap-3">

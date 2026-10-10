@@ -317,7 +317,7 @@ export function App({ role = 'torcida' }: AppProps = {}) {
 
   // Conteúdo interno do aplicativo
   const AppContent = (
-    <div data-role={role} className="flex flex-col min-h-full bg-[#0B1320] text-white font-sans selection:bg-[#00D26A] selection:text-[#0B1320] relative">
+    <div data-role={role} className="flex flex-col h-full max-h-full overflow-hidden bg-[#0B1320] text-white font-sans selection:bg-[#00D26A] selection:text-[#0B1320] relative">
       <Header
         role={role}
         isSyncing={isSyncing}
@@ -339,7 +339,7 @@ export function App({ role = 'torcida' }: AppProps = {}) {
 
       <IOSInstallBanner />
 
-      <main className="flex-1 w-full px-3.5 pt-3.5 pb-24">
+      <main className="flex-1 w-full overflow-y-auto overscroll-contain px-3.5 pt-3.5 pb-8">
         {activeTab === 'matches' && (
           <MatchesTab
             matches={state.matches}
@@ -443,7 +443,7 @@ export function App({ role = 'torcida' }: AppProps = {}) {
       {/* Renderização Condicional: No celular é 100% nativo. No Desktop oferece a moldura elegante do aparelho */}
       {useDeviceFrame ? (
         <div className="w-full flex justify-center items-center py-0 md:py-6">
-          <div className="relative w-full max-w-[420px] md:h-[860px] h-screen bg-[#0B1320] md:rounded-[48px] overflow-hidden md:border-[10px] md:border-[#182740] md:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.95)] flex flex-col">
+          <div className="relative w-full max-w-[420px] md:h-[860px] h-screen h-[100dvh] bg-[#0B1320] md:rounded-[48px] overflow-hidden md:border-[10px] md:border-[#182740] md:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.95)] flex flex-col">
             {/* Dynamic Island e Status Bar (estilo smartphone moderno) */}
             <div className="hidden md:flex items-center justify-between px-7 pt-3.5 pb-2 text-xs text-[#8B9BB4] bg-[#0B1320] select-none shrink-0 z-50">
               <span className="font-semibold text-xs text-white">{currentTime}</span>
@@ -460,8 +460,8 @@ export function App({ role = 'torcida' }: AppProps = {}) {
               </div>
             </div>
 
-            {/* Viewport com Rolagem Suave */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
+            {/* Viewport Contido com Rolagem no Miolo */}
+            <div className="flex-1 overflow-hidden relative">
               {AppContent}
             </div>
 
@@ -472,7 +472,7 @@ export function App({ role = 'torcida' }: AppProps = {}) {
           </div>
         </div>
       ) : (
-        <div className="w-full max-w-md min-h-screen bg-[#0B1320] flex flex-col shadow-2xl">
+        <div className="w-full max-w-md h-screen h-[100dvh] bg-[#0B1320] flex flex-col shadow-2xl overflow-hidden">
           {AppContent}
         </div>
       )}
