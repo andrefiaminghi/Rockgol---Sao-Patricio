@@ -191,20 +191,20 @@ export interface IBackupService {
   * **Quando** o usuário rola o conteúdo verticalmente,
   * **Então** o cabeçalho (`Header`) deve permanecer 100% estático e fixado no topo da tela, visível o tempo todo sem sofrer deslocamento.
 
-* **AC-012 (Footer de Abas Estático na Base):**
-  * **Dado** o acesso a qualquer uma das abas em qualquer um dos dois PWAs,
-  * **Quando** o usuário rola o conteúdo verticalmente,
-  * **Então** a barra de navegação inferior (`Navigation`) deve permanecer 100% estática e fixada na base da tela, visível o tempo todo sem sofrer deslocamento.
+* **AC-012 (Footer de Abas Estático e Desobstruído na Base):**
+  * **Dado** o acesso a qualquer uma das abas em qualquer um dos dois PWAs em dispositivos móveis (Android e iOS),
+  * **Quando** o usuário visualiza o rodapé de navegação inferior (`Navigation`),
+  * **Então** a barra de navegação deve permanecer 100% estática e fixada na base, contando com respiro seguro mínimo (`pb-safe-nav`) para ficar totalmente posicionada acima dos botões virtuais de navegação do sistema (Voltar, Início, Recentes no Android) e Home Indicator no iOS, garantindo que todas as 6 abas fiquem visíveis e perfeitamente acessíveis ao toque.
 
 * **AC-013 (Rolagem Independente do Conteúdo):**
   * **Dado** um conteúdo de aba extenso com múltiplos cards ou tabelas que excedem a altura da tela,
   * **Quando** o usuário interage rolando a página,
   * **Então** apenas o container do meio (`<main>`) deve rolar verticalmente com rolagem suave (`overscroll-contain`), garantindo que o último elemento da lista possa ser visualizado sem ser cortado pelo rodapé.
 
-* **AC-014 (Simulador Desktop e Safe Areas):**
-  * **Dado** a exibição no modo simulador de smartphone no desktop ou em celulares reais com notch/safe-areas (iOS e Android),
+* **AC-014 (Simulador Desktop e Safe Areas Reforçadas):**
+  * **Dado** a exibição no modo simulador de smartphone no desktop ou em celulares reais com botões de navegação e notch (iOS e Android),
   * **Quando** o layout é montado,
-  * **Então** a estrutura fixa deve respeitar os limites do container simulado no desktop (`h-full` contido na moldura) e as margens de segurança `pt-safe` e `pb-safe` em dispositivos móveis.
+  * **Então** a estrutura fixa deve respeitar os limites do container simulado no desktop (`h-full` contido na moldura) e calcular o padding de segurança como a soma da área segura com o respiro ergonômico mínimo (`calc(env(safe-area-inset-bottom, 0px) + 1.75rem)`).
 
 ## 4. Casos Negativos & Condições de Borda
 

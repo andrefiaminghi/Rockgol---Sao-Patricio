@@ -339,7 +339,7 @@ export function App({ role = 'torcida' }: AppProps = {}) {
 
       <IOSInstallBanner />
 
-      <main className="flex-1 w-full overflow-y-auto overscroll-contain px-3.5 pt-3.5 pb-8">
+      <main className="flex-1 w-full overflow-y-auto overscroll-contain px-3.5 pt-3.5 pb-16">
         {activeTab === 'matches' && (
           <MatchesTab
             matches={state.matches}

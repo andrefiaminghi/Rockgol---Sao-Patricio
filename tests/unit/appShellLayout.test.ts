@@ -13,13 +13,13 @@ describe('Layout Estático do App Shell (Header e Footer Imóveis)', () => {
     expect(html).toContain('pt-safe');
   });
 
-  it('o Navigation deve conter a classe shrink-0 e pb-safe para ancoragem fixa no rodapé', () => {
+  it('o Navigation deve conter a classe shrink-0 e pb-safe-nav para respiro seguro sobre os botões do celular', () => {
     const html = renderToString(
       React.createElement(Navigation, { activeTab: 'matches', onTabChange: () => {} })
     );
 
     expect(html).toContain('shrink-0');
-    expect(html).toContain('pb-safe');
+    expect(html).toContain('pb-safe-nav');
   });
 
   it('o container <main> deve possuir overflow-y-auto e flex-1 para rolagem vertical independente', () => {

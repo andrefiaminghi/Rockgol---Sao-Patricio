@@ -5,6 +5,21 @@ project: "Rockgol - São Patrício"
 
 # Histórico de Sessões — Rockgol - São Patrício
 
+## [2026-10-09] Elevação do Footer e Respiro Seguro contra Botões Virtuais do Celular
+- **Objetivo da Sessão:** Solucionar o problema onde o footer ficava escondido embaixo dos botões do celular (barra de navegação virtual Android / gestos iOS), impossibilitando o acesso e toque nas 6 abas.
+- **Vínculo ao Plano:** Plan `plan-2026-10-09-007` (Tasks 1 a 3), Critérios AC-012 e AC-014 em `.afr/features/rockgol-torneio-app.md` e Registro de Bugfix DIV-09 em `.afr/context/known-fixes.md`.
+- **Atividades Realizadas:**
+  - **Diagnóstico da Causa Raiz:** A variável `env(safe-area-inset-bottom)` retorna `0px` na maioria dos navegadores Android, anulando fallbacks e colando o footer na borda inferior da tela, exatamente sob os botões nativos `Voltar`, `Início` e `Recentes`.
+  - **Estilização e Respiro Ergonômico (`src/index.css` e `src/components/Navigation.tsx`):**
+    - Criada a classe utilitária `.pb-safe-nav` com padding calculado `calc(env(safe-area-inset-bottom, 0px) + 2rem)`, garantindo pelo menos 32px de folga na base em qualquer aparelho.
+    - O `<nav>` foi atualizado para utilizar `pb-safe-nav` com `pt-2 pb-1`, elevando as abas e deixando-as 100% visíveis e com área de toque confortável.
+  - **Ajuste de Rolagem no Container Central (`src/App.tsx`):**
+    - Aumentado o padding inferior do `<main>` para `pb-16` para folga total sobre o rodapé elevado.
+  - **Testes Automatizados:**
+    - Atualizado [`tests/unit/appShellLayout.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/appShellLayout.test.ts) validando a presença de `pb-safe-nav`.
+    - Suíte completa com 109/109 testes passando no Vitest (`npm test`).
+    - Build de produção (`npm run build`) validado com sucesso.
+
 ## [2026-10-09] Header e Footer Estáticos no Topo e Base (App Shell Fixo)
 - **Objetivo da Sessão:** Atender à solicitação do usuário para que o Header permaneça 100% estático no topo da tela e o Footer com as 6 abas permaneça 100% estático no rodapé da tela, sem nenhum deslocamento vertical ao rolar, em qualquer aba acessada e em ambos os PWAs (Torcida e Árbitro).
 - **Vínculo ao Plano:** Plan `plan-2026-10-09-006` (Tasks 1 a 3) e Critérios AC-011 a AC-014 em `.afr/features/rockgol-torneio-app.md`.

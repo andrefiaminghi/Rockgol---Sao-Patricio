@@ -22,6 +22,25 @@ maintainers: ["André Ribeiro"]
 | DIV-06 | Mobile / PDF | Exportação de PDF com window.open direciona para o Chrome e trava retorno | resolvido |
 | DIV-07 | Mobile / Backup | Download de blob em WebView Android não salva arquivo físico no aparelho | resolvido |
 | DIV-08 | Supabase / PWA Cache | Súmula excluída restaurada e nova súmula sobreposta ao sincronizar no PWA móvel | resolvido |
+| DIV-09 | Mobile / UI Safe Area | Footer de abas encoberto por botões virtuais de navegação do celular | resolvido |
+
+---
+
+## DIV-09 — Footer de abas encoberto por botões virtuais de navegação do celular
+
+**Sintoma:** Em dispositivos móveis Android (ou iOS com barra de gestos), a barra inferior com as 6 abas (`Jogos`, `Times`, `Classificação`, `Mata-Mata`, `Súmula`, `Exportar`) ficava oculta ou sobreposta pelos botões virtuais do sistema (`Voltar`, `Início`, `Recentes`), impedindo o clique e o acesso às abas.
+
+**Causa raiz:** 
+1. No Android (Chrome/Samsung Internet), a variável CSS `env(safe-area-inset-bottom)` retorna `0px` e anula qualquer fallback de sintaxe, aplicando `padding-bottom: 0px`.
+2. Sem padding explícito somado na base do `<nav>`, os ícones e rótulos ficavam colados no limite inferior da tela, coincidindo exatamente com a área reservada para os botões do sistema operacional.
+
+**Fix:**
+1. Criada a classe utilitária `.pb-safe-nav` em `src/index.css` com cálculo somado `padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 2rem);` (32px de respiro mínimo mesmo quando `env` for 0px).
+2. Atualizado o `<nav>` em `src/components/Navigation.tsx` com `pb-safe-nav` e `pt-2 pb-1`.
+3. Elevado o padding inferior do container `<main>` em `src/App.tsx` para `pb-16`, garantindo que o final do conteúdo não seja encoberto pelo rodapé elevado.
+
+**Data:** 2026-10-09
+**Onde aplica:** `src/index.css`, `src/components/Navigation.tsx`, `src/App.tsx`.
 
 ---
 
