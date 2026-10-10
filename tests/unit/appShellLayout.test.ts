@@ -13,13 +13,24 @@ describe('Layout Estático do App Shell (Header e Footer Imóveis)', () => {
     expect(html).toContain('pt-safe');
   });
 
-  it('o Navigation deve conter a classe shrink-0 e pb-safe-nav para respiro seguro sobre os botões do celular', () => {
+  it('o Navigation deve atuar como sub-header superior com shrink-0 e border-b border-[#1E2D44]', () => {
     const html = renderToString(
       React.createElement(Navigation, { activeTab: 'matches', onTabChange: () => {} })
     );
 
     expect(html).toContain('shrink-0');
-    expect(html).toContain('pb-safe-nav');
+    expect(html).toContain('border-b');
+  });
+
+  it('a barra Navigation deve ser posicionada imediatamente antes do container <main> no App', () => {
+    const html = renderToString(React.createElement<AppProps>(App, { role: 'torcida' }));
+
+    const navIndex = html.indexOf('<nav');
+    const mainIndex = html.indexOf('<main');
+
+    expect(navIndex).toBeGreaterThan(-1);
+    expect(mainIndex).toBeGreaterThan(-1);
+    expect(navIndex).toBeLessThan(mainIndex); // nav deve vir antes de main!
   });
 
   it('o container <main> deve possuir overflow-y-auto e flex-1 para rolagem vertical independente', () => {

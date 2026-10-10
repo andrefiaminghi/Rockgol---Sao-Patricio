@@ -19,8 +19,8 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }
   ];
 
   return (
-    <nav className="shrink-0 z-40 bg-[#1C2127]/95 backdrop-blur-md border-t border-[#2F343C] pb-safe-nav shadow-2xl">
-      <div className="grid grid-cols-6 px-1 pt-2 pb-1">
+    <nav className="shrink-0 z-30 bg-[#0E1726]/95 backdrop-blur-md border-b border-[#1E2D44] shadow-md">
+      <div className="grid grid-cols-6 px-1 py-1.5">
         {tabs.map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -34,13 +34,13 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }
                   : 'text-[#8F99A8] hover:text-[#D3D8DE]'
               }`}
             >
-              {isActive && (
-                <span className="absolute -top-2 w-7 h-0.5 bg-[#238551] rounded-full" />
-              )}
               <Icon className={`w-5 h-5 transition-transform ${isActive ? 'scale-105 stroke-[2.5]' : 'stroke-[1.8]'}`} />
-              <span className="text-[10px] mt-1 tracking-tight truncate max-w-full font-medium">
+              <span className="text-[10px] mt-0.5 tracking-tight truncate max-w-full font-medium">
                 {tab.label}
               </span>
+              {isActive && (
+                <span className="absolute bottom-0 w-7 h-0.5 bg-[#238551] rounded-full" />
+              )}
             </button>
           );
         })}

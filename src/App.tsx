@@ -330,8 +330,11 @@ export function App({ role = 'torcida' }: AppProps = {}) {
         onResetPrompt={handleResetState}
       />
 
+      {/* Segundo Header: Barra de Abas Fixa no Topo */}
+      <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+
       {toastMessage && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#121D2F] text-white px-4 py-2.5 rounded-2xl border border-[#00D26A]/40 shadow-xl shadow-black/50 text-xs font-bold flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="fixed top-28 left-1/2 -translate-x-1/2 z-50 bg-[#121D2F] text-white px-4 py-2.5 rounded-2xl border border-[#00D26A]/40 shadow-xl shadow-black/50 text-xs font-bold flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
           <Sparkles className="w-4 h-4 text-[#00D26A]" />
           <span>{toastMessage}</span>
         </div>
@@ -339,7 +342,7 @@ export function App({ role = 'torcida' }: AppProps = {}) {
 
       <IOSInstallBanner />
 
-      <main className="flex-1 w-full overflow-y-auto overscroll-contain px-3.5 pt-3.5 pb-16">
+      <main className="flex-1 w-full overflow-y-auto overscroll-contain px-3.5 pt-3.5 pb-8">
         {activeTab === 'matches' && (
           <MatchesTab
             matches={state.matches}
@@ -388,8 +391,6 @@ export function App({ role = 'torcida' }: AppProps = {}) {
           />
         )}
       </main>
-
-      <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 

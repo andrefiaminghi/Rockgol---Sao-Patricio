@@ -5,6 +5,23 @@ project: "Rockgol - São Patrício"
 
 # Histórico de Sessões — Rockgol - São Patrício
 
+## [2026-10-09] Posicionamento da Barra de Abas Abaixo do Header (Sub-Header Superior)
+- **Objetivo da Sessão:** Mover a barra de navegação com as 6 abas (`Jogos`, `Times`, `Classificação`, `Mata-Mata`, `Súmula`, `Exportar`) do rodapé para o topo da tela, logo abaixo do Header principal (atuando como um segundo header estático / sub-header), eliminando qualquer risco de sobreposição por botões virtuais de navegação do celular.
+- **Vínculo ao Plano:** Plan `plan-2026-10-09-008` (Tasks 1 a 3) e Critérios AC-012 a AC-014 em `.afr/features/rockgol-torneio-app.md`.
+- **Atividades Realizadas:**
+  - **Reorganização Estrutural do App Shell (`src/App.tsx`):**
+    - `<Navigation />` movido para imediatamente após `<Header />` e antes de `<main>`.
+    - Posicionamento do Toast atualizado para `top-28`.
+    - O container `<main>` passa a fluir livremente abaixo do sub-header com `flex-1 overflow-y-auto overscroll-contain px-3.5 pt-3.5 pb-8`.
+    - Base da tela totalmente desobstruída (sem nenhum componente na base).
+  - **Estilização Visual de Sub-Header (`src/components/Navigation.tsx`):**
+    - Ajustado para `shrink-0 z-30 bg-[#0E1726]/95 backdrop-blur-md border-b border-[#1E2D44] shadow-md`.
+    - Indicador de aba ativa posicionado na base do botão (`bottom-0`).
+  - **Testes Automatizados:**
+    - Atualizado [`tests/unit/appShellLayout.test.ts`](file:///c:/Users/andre.ribeiro/Documents/GitHub-AFR/Rockgol---Sao-Patricio/tests/unit/appShellLayout.test.ts) validando que `<nav>` é renderizado antes de `<main>` e possui `border-b border-[#1E2D44]`.
+    - Suíte completa com 110/110 testes passando no Vitest (`npm test`).
+    - Build de produção (`npm run build`) validado com sucesso.
+
 ## [2026-10-09] Elevação do Footer e Respiro Seguro contra Botões Virtuais do Celular
 - **Objetivo da Sessão:** Solucionar o problema onde o footer ficava escondido embaixo dos botões do celular (barra de navegação virtual Android / gestos iOS), impossibilitando o acesso e toque nas 6 abas.
 - **Vínculo ao Plano:** Plan `plan-2026-10-09-007` (Tasks 1 a 3), Critérios AC-012 e AC-014 em `.afr/features/rockgol-torneio-app.md` e Registro de Bugfix DIV-09 em `.afr/context/known-fixes.md`.
